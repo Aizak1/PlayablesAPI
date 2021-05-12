@@ -309,7 +309,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88426a553e4e17d439df80fab1ee91d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animationToPlay: {fileID: 7400000, guid: c2cd4261e727dac4780b2641b7a2f207, type: 2}
+  AnimationClips: []
+  Sequence: 
+  StartTransitionMultiplier: 0
+--- !u!114 &838713092
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 838713088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ae475bb3ded5aa4289d1151dc75a403, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  jsonFile: {fileID: 4900000, guid: 5a1cd32c3196c7245b0d4f401e642d13, type: 3}
+  animator: {fileID: 838713090}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
