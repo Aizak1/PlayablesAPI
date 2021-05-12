@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 
-namespace playablesAnimator {
+namespace animator {
 
     [RequireComponent(typeof(Animator))]
     public class PlayablesComponent : MonoBehaviour {
@@ -17,17 +17,25 @@ namespace playablesAnimator {
         private void Start() {
             graph = PlayableGraph.Create();
             graph.Play();
+            mixer = AnimationMixerPlayable.Create(graph);
 
             AnimationClipPlayable playableClip =
                 AnimationClipPlayable.Create(graph, animationToPlay);
 
+
             AnimationPlayableOutput animOutput =
                 AnimationPlayableOutput.Create(graph, "output",GetComponent<Animator>());
 
+            mixer.AddInput(playableClip, animOutput.GetSourceOutputPort());
 
+            animOutput.SetSourcePlayable(mixer);
 
-            animOutput.SetSourcePlayable(playableClip);
+            float weight = 1;
+            int animationIndex = 0;
+
+            mixer.SetInputWeight(animationIndex, weight);
         }
+
 
         private void OnDestroy() {
             graph.Destroy();
