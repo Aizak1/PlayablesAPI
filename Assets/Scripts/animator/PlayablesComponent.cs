@@ -37,28 +37,22 @@ namespace animator {
             mixer = AnimationMixerPlayable.Create(graph);
 
             if (AnimationClips.Count == 0) {
-                enabled = false;
-                throw new UnityException("AnimationClips list is empty");
+                ThrowExeption("AnimationClips list is empty");
             }
 
             if (Sequence == null || Sequence.Length == 0) {
                 foreach (var item in AnimationClips) {
-                    var playableClip = AnimationClipPlayable.Create(graph, item);
-                    playableClip.Pause();
-                    animationList.AddLast(playableClip);
+                    animationList.AddLast(AnimationClipPlayable.Create(graph, item));
                 }
             } else {
                 string[] positionsInSequence = Sequence.Split('-');
                 foreach (var item in positionsInSequence) {
                     int animationPos = int.Parse(item) - 1;
                     if (animationPos >= AnimationClips.Count) {
-                        enabled = false;
-                        throw new UnityException("Invalid sequence");
+                        ThrowExeption("Invalid sequence");
                     }
                     var animationClip = AnimationClips[animationPos];
-                    var playableClip = AnimationClipPlayable.Create(graph, animationClip);
-                    playableClip.Pause();
-                    animationList.AddLast(playableClip);
+                    animationList.AddLast(AnimationClipPlayable.Create(graph, animationClip));
                 }
             }
 
@@ -78,7 +72,6 @@ namespace animator {
 
             currentAnimationNode = animationList.First;
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
-            currentAnimationNode.Value.Play();
             SetNewTransitionTime();
         }
 
@@ -93,14 +86,9 @@ namespace animator {
                 } else {
                     nextAnimationNode = currentAnimationNode.Next;
                 }
-                if (StartTransitionMultiplier == 1f) {
-                    mixer.SetInputWeight(currentAnimationNode.Value, 0);
-                    ChangeAnimation(nextAnimationNode);
-                    return;
-                }
 
                 if (Time.time > currentAnimationEndTime) {
-                    ChangeAnimation(nextAnimationNode);
+                    ChangeAnimation(currentAnimationNode, nextAnimationNode);
                     return;
                 }
 
@@ -119,12 +107,14 @@ namespace animator {
             mixer.SetInputWeight(nextElenemt.Value, weight);
         }
 
-        private void ChangeAnimation(LinkedListNode<AnimationClipPlayable> nextElenemt) {
-            currentAnimationNode.Value.SetTime(0);
-            currentAnimationNode.Value.Pause();
+        private void ChangeAnimation(LinkedListNode<AnimationClipPlayable> currentElenemt,
+            LinkedListNode<AnimationClipPlayable> nextElenemt) {
+            mixer.SetInputWeight(currentAnimationNode.Value, 0);
+
             currentAnimationNode = nextElenemt;
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
-            currentAnimationNode.Value.Play();
+            currentAnimationNode.Value.SetTime(0);
+
             SetNewTransitionTime();
         }
 
@@ -135,6 +125,11 @@ namespace animator {
 
             currentAnimationEndTime = Time.time +
                 currentAnimationNode.Value.GetAnimationClip().length;
+        }
+
+        private void ThrowExeption(string exceptionText) {
+            enabled = false;
+            throw new UnityException(exceptionText);
         }
 
         private void OnDestroy() {
