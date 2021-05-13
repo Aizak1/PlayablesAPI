@@ -1,5 +1,6 @@
 {
-  "animationsName": [ "Clapping", "Silly Dancing" ],
-  "sequence": "2-1",
-  "startTransitionMultiplier": 0.7
+  "animationsName": [ "Clapping", "Silly Dancing", "Flair", "Punching Bag", "Spin In Place" ],
+  "sequence": "2-1-3-5-4",
+  "startTransitionMultiplier": 0.7,
+  "isLooping": "true"
 }

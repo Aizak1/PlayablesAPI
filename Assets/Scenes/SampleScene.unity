@@ -309,11 +309,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 88426a553e4e17d439df80fab1ee91d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  AnimationClips: []
+  AnimationClips:
+  - {fileID: 7400000, guid: df984cf11eaf051448751258379d0303, type: 2}
+  - {fileID: 7400000, guid: 8ebdf3eacf2f8084ca6215169c5f4fc5, type: 2}
+  - {fileID: 7400000, guid: 4e2bb44b5a8c5914089caecdb587575d, type: 2}
+  - {fileID: 7400000, guid: c7348c31a8dabc14283c475d263c3324, type: 2}
+  - {fileID: 7400000, guid: 48649a6a62b7cee408e332432682909b, type: 2}
+  - {fileID: 7400000, guid: 66545a4734d66a64192e92231814a4e7, type: 2}
+  - {fileID: 7400000, guid: c2cd4261e727dac4780b2641b7a2f207, type: 2}
   Sequence: 
   StartTransitionMultiplier: 0
   IsLooping: 1
---- !u!114 &838713092
+--- !u!114 &838713091
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

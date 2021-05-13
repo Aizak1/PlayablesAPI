@@ -8,6 +8,7 @@ namespace animator {
         public string[] animationsName;
         public string sequence;
         public float startTransitionMultiplier;
+        public bool isLooping;
     }
 }
 

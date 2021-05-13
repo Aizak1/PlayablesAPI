@@ -13,6 +13,16 @@ public class AnimatorDataController : MonoBehaviour
     [SerializeField] private PlayablesComponent animator;
 
     private void Awake() {
+        if (jsonFile == null) {
+            enabled = false;
+            throw new UnityException("No json file");
+        }
+
+        if (animator == null) {
+            enabled = false;
+            throw new UnityException("No animator attached");
+        }
+
         animatorData = JsonUtility.FromJson<AnimatorData>(jsonFile.text);
         List<AnimationClip> animationClips = new List<AnimationClip>();
         foreach (string item in animatorData.animationsName) {
@@ -29,5 +39,6 @@ public class AnimatorDataController : MonoBehaviour
         animator.AnimationClips = animationClips;
         animator.Sequence = animatorData.sequence;
         animator.StartTransitionMultiplier = animatorData.startTransitionMultiplier;
+        animator.IsLooping = animatorData.isLooping;
     }
 }

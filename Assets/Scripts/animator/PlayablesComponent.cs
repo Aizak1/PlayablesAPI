@@ -36,17 +36,38 @@ namespace animator {
             graph.Play();
             mixer = AnimationMixerPlayable.Create(graph);
 
-            string[] positionsInSequence = Sequence.Split('-');
-            foreach (var item in positionsInSequence) {
-                var animationClip = AnimationClips[int.Parse(item) - 1];
-                var playableClip = AnimationClipPlayable.Create(graph, animationClip);
-                playableClip.Pause();
-                animationList.AddLast(playableClip);
+            if (AnimationClips.Count == 0) {
+                enabled = false;
+                throw new UnityException("AnimationClips list is empty");
+            }
+
+            if (Sequence == null || Sequence.Length == 0) {
+                foreach (var item in AnimationClips) {
+                    var playableClip = AnimationClipPlayable.Create(graph, item);
+                    playableClip.Pause();
+                    animationList.AddLast(playableClip);
+                }
+            } else {
+                string[] positionsInSequence = Sequence.Split('-');
+                foreach (var item in positionsInSequence) {
+                    int animationPos = int.Parse(item) - 1;
+                    if (animationPos >= AnimationClips.Count) {
+                        enabled = false;
+                        throw new UnityException("Invalid sequence");
+                    }
+                    var animationClip = AnimationClips[animationPos];
+                    var playableClip = AnimationClipPlayable.Create(graph, animationClip);
+                    playableClip.Pause();
+                    animationList.AddLast(playableClip);
+                }
+            }
+
+            if (StartTransitionMultiplier == 0) {
+                StartTransitionMultiplier = 1;
             }
 
             AnimationPlayableOutput animOutput =
                 AnimationPlayableOutput.Create(graph, "output", GetComponent<Animator>());
-
             var source = animOutput.GetSourceOutputPort();
 
             foreach (var item in animationList) {
@@ -92,7 +113,8 @@ namespace animator {
 
         private void SpreadWeight(float weight,
             LinkedListNode<AnimationClipPlayable> currentElement,
-            LinkedListNode<AnimationClipPlayable> nextElenemt) {
+            LinkedListNode<AnimationClipPlayable> nextElenemt
+            ){
             mixer.SetInputWeight(currentElement.Value, 1 - weight);
             mixer.SetInputWeight(nextElenemt.Value, weight);
         }
