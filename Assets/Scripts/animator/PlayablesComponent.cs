@@ -1,23 +1,20 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
-using System.IO;
+
 
 namespace animator {
 
     [RequireComponent(typeof(Animator))]
     public class PlayablesComponent : MonoBehaviour {
+
         [SerializeField]
-        public List<AnimationClip> AnimationClips;
+        private TextAsset jsonFile;
         [SerializeField]
-        public int[] Sequence;
+        private Resource resource;
         [SerializeField]
-        public float StartTransitionMultiplier;
-        [SerializeField]
-        public bool IsLooping;
+        private AnimatorData animatorData;
 
         private LinkedListNode<AnimationClipPlayable> currentAnimationNode;
         private LinkedListNode<AnimationClipPlayable> nextAnimationNode;
@@ -30,33 +27,52 @@ namespace animator {
         private float nextTransitionTime = 0;
         private float currentAnimationEndTime = 0;
 
+
         private void Start() {
             animationList = new LinkedList<AnimationClipPlayable>();
             graph = PlayableGraph.Create();
             graph.Play();
             mixer = AnimationMixerPlayable.Create(graph);
 
-            if (AnimationClips.Count == 0) {
+            if(jsonFile != null) {
+                animatorData = JsonUtility.FromJson<AnimatorData>(jsonFile.text);
+            }
+
+            var playablesclips = new AnimationClipPlayable[animatorData.animationsName.Length];
+            for (int i = 0; i < animatorData.animationsName.Length; i++) {
+                var clip = resource.animationPairs[animatorData.animationsName[i]];
+
+                if (clip == null) {
+                    ShowException("There is such animation in resources");
+                }
+
+                playablesclips[i] = AnimationClipPlayable.Create(graph, clip);
+                playablesclips[i].Pause();
+            }
+
+
+            if(animatorData.sequence == null || animatorData.sequence.Length == 0) {
+                foreach (var item in playablesclips) {
+                    animationList.AddLast(item);
+                }
+            } else {
+                foreach (var number in animatorData.sequence) {
+                    var animationPosition = number - 1;
+                    if (animationPosition>= playablesclips.Length) {
+                        ShowException("Invalid sequence");
+                    }
+                    animationList.AddLast(playablesclips[animationPosition]);
+
+                }
+            }
+
+            if (animationList.Count == 0) {
                 ShowException("AnimationClips list is empty");
             }
 
-            if (Sequence == null || Sequence.Length == 0) {
-                foreach (var item in AnimationClips) {
-                    animationList.AddLast(AnimationClipPlayable.Create(graph, item));
-                }
-            } else {
-                foreach (var item in Sequence) {
-                    int animationPos = item - 1;
-                    if (animationPos >= AnimationClips.Count) {
-                        ShowException("Invalid sequence");
-                    }
-                    var animationClip = AnimationClips[animationPos];
-                    animationList.AddLast(AnimationClipPlayable.Create(graph, animationClip));
-                }
-            }
 
-            if (StartTransitionMultiplier == 0) {
-                StartTransitionMultiplier = 1;
+            if (animatorData.startTransitionMultiplier == 0) {
+                animatorData.startTransitionMultiplier = 1;
             }
 
             AnimationPlayableOutput animOutput =
@@ -71,13 +87,16 @@ namespace animator {
 
             currentAnimationNode = animationList.First;
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
+            currentAnimationNode.Value.Play();
             SetNewTransitionTime();
+
         }
+
 
         private void Update() {
             if (Time.time >= nextTransitionTime) {
                 if (currentAnimationNode.Next == null) {
-                    if (IsLooping) {
+                    if (animatorData.isLooping) {
                         nextAnimationNode = animationList.First;
                     } else {
                         return;
@@ -112,6 +131,7 @@ namespace animator {
             currentAnimationNode = nextElenemt;
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
             currentAnimationNode.Value.SetTime(0);
+            currentAnimationNode.Value.Play();
 
             SetNewTransitionTime();
         }
@@ -119,7 +139,7 @@ namespace animator {
         private void SetNewTransitionTime() {
             nextTransitionTime = Time.time +
                 currentAnimationNode.Value.GetAnimationClip().length *
-                StartTransitionMultiplier;
+                animatorData.startTransitionMultiplier;
 
             currentAnimationEndTime = Time.time +
                 currentAnimationNode.Value.GetAnimationClip().length;

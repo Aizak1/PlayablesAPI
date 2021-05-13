@@ -4,6 +4,7 @@ using UnityEngine;
 
 
 namespace animator {
+    [System.Serializable]
     public struct AnimatorData {
         public string[] animationsName;
         public int[] sequence;
