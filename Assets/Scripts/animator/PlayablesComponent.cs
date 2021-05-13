@@ -13,7 +13,7 @@ namespace animator {
         [SerializeField]
         public List<AnimationClip> AnimationClips;
         [SerializeField]
-        public string Sequence;
+        public int[] Sequence;
         [SerializeField]
         public float StartTransitionMultiplier;
         [SerializeField]
@@ -37,7 +37,7 @@ namespace animator {
             mixer = AnimationMixerPlayable.Create(graph);
 
             if (AnimationClips.Count == 0) {
-                ThrowExeption("AnimationClips list is empty");
+                ShowException("AnimationClips list is empty");
             }
 
             if (Sequence == null || Sequence.Length == 0) {
@@ -45,11 +45,10 @@ namespace animator {
                     animationList.AddLast(AnimationClipPlayable.Create(graph, item));
                 }
             } else {
-                string[] positionsInSequence = Sequence.Split('-');
-                foreach (var item in positionsInSequence) {
-                    int animationPos = int.Parse(item) - 1;
+                foreach (var item in Sequence) {
+                    int animationPos = item - 1;
                     if (animationPos >= AnimationClips.Count) {
-                        ThrowExeption("Invalid sequence");
+                        ShowException("Invalid sequence");
                     }
                     var animationClip = AnimationClips[animationPos];
                     animationList.AddLast(AnimationClipPlayable.Create(graph, animationClip));
@@ -127,9 +126,9 @@ namespace animator {
                 currentAnimationNode.Value.GetAnimationClip().length;
         }
 
-        private void ThrowExeption(string exceptionText) {
+        private void ShowException(string exceptionText) {
             enabled = false;
-            throw new UnityException(exceptionText);
+            Debug.LogError(exceptionText);
         }
 
         private void OnDestroy() {

@@ -14,17 +14,15 @@ public class AnimatorDataController : MonoBehaviour
 
     private void Awake() {
         if (jsonFile == null) {
-            enabled = false;
-            throw new UnityException("No json file");
+            ShowException("No json file");
         }
 
         if (animator == null) {
-            enabled = false;
-            throw new UnityException("No animator attached");
+            ShowException("Animator is not attached");
         }
 
         animatorData = JsonUtility.FromJson<AnimatorData>(jsonFile.text);
-        List<AnimationClip> animationClips = new List<AnimationClip>();
+        animator.AnimationClips = new List<AnimationClip>();
         foreach (string item in animatorData.animationsName) {
 
             string[] guidPath = AssetDatabase.FindAssets(item);
@@ -33,12 +31,16 @@ public class AnimatorDataController : MonoBehaviour
             AnimationClip animationClip =
                 (AnimationClip)AssetDatabase.LoadAssetAtPath(path, typeof(AnimationClip));
 
-            animationClips.Add(animationClip);
+            animator.AnimationClips.Add(animationClip);
         }
 
-        animator.AnimationClips = animationClips;
         animator.Sequence = animatorData.sequence;
         animator.StartTransitionMultiplier = animatorData.startTransitionMultiplier;
         animator.IsLooping = animatorData.isLooping;
+    }
+
+    private void ShowException(string exceptionText) {
+        enabled = false;
+        Debug.LogError(exceptionText);
     }
 }
