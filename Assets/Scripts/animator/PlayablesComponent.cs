@@ -148,12 +148,9 @@ namespace animator {
             mixer.SetInputWeight(currentAnimationNode.Value, 0);
             if (isRandom) {
                 InsertRandomPlayable();
+                currentAnimationNode.Value.Destroy();
             }
             currentAnimationNode = nextElenemt;
-
-            if (isRandom) {
-                currentAnimationNode.Previous.Value.Destroy();
-            }
 
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
             currentAnimationNode.Value.SetTime(0);
