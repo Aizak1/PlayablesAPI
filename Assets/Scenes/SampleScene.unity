@@ -312,6 +312,7 @@ MonoBehaviour:
   AnimationClips: []
   Sequence: 
   StartTransitionMultiplier: 0
+  IsLooping: 1
 --- !u!114 &838713092
 MonoBehaviour:
   m_ObjectHideFlags: 0

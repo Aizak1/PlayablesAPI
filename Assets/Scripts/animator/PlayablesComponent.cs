@@ -16,18 +16,19 @@ namespace animator {
         public string Sequence;
         [SerializeField]
         public float StartTransitionMultiplier;
+        [SerializeField]
+        public bool IsLooping;
 
         private LinkedListNode<AnimationClipPlayable> currentAnimationNode;
+        private LinkedListNode<AnimationClipPlayable> nextAnimationNode;
 
         private PlayableGraph graph;
         private AnimationMixerPlayable mixer;
 
         private LinkedList<AnimationClipPlayable> animationList;
 
-        private float nextTransitionTime;
-        private float currentAnimationEndTime;
-
-        private const float WEIGHT_ACCURANCY = 0.01f;
+        private float nextTransitionTime = 0;
+        private float currentAnimationEndTime = 0;
 
         private void Start() {
             animationList = new LinkedList<AnimationClipPlayable>();
@@ -39,6 +40,7 @@ namespace animator {
             foreach (var item in positionsInSequence) {
                 var animationClip = AnimationClips[int.Parse(item) - 1];
                 var playableClip = AnimationClipPlayable.Create(graph, animationClip);
+                playableClip.Pause();
                 animationList.AddLast(playableClip);
             }
 
@@ -55,39 +57,62 @@ namespace animator {
 
             currentAnimationNode = animationList.First;
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
+            currentAnimationNode.Value.Play();
             SetNewTransitionTime();
         }
 
         private void Update() {
-            if (Time.time >= nextTransitionTime && Time.time <= currentAnimationEndTime
-                && currentAnimationNode.Next != null) {
+            if (Time.time >= nextTransitionTime) {
+                if (currentAnimationNode.Next == null) {
+                    if (IsLooping) {
+                        nextAnimationNode = animationList.First;
+                    } else {
+                        return;
+                    }
+                } else {
+                    nextAnimationNode = currentAnimationNode.Next;
+                }
+                if (StartTransitionMultiplier == 1f) {
+                    mixer.SetInputWeight(currentAnimationNode.Value, 0);
+                    ChangeAnimation(nextAnimationNode);
+                    return;
+                }
+
+                if (Time.time > currentAnimationEndTime) {
+                    ChangeAnimation(nextAnimationNode);
+                    return;
+                }
+
                 float weight = (Time.time - nextTransitionTime)
                         / (currentAnimationEndTime - nextTransitionTime);
 
-                SpreadWeight(weight, currentAnimationNode);
+                SpreadWeight(weight, currentAnimationNode, nextAnimationNode);
             }
         }
 
-        private void SpreadWeight(float weight, LinkedListNode<AnimationClipPlayable> element) {
-            mixer.SetInputWeight(element.Value, 1 - weight);
-            mixer.SetInputWeight(element.Next.Value, weight);
-            if (1 - weight <= WEIGHT_ACCURANCY) {
-                ChangeAnimation();
-            }
+        private void SpreadWeight(float weight,
+            LinkedListNode<AnimationClipPlayable> currentElement,
+            LinkedListNode<AnimationClipPlayable> nextElenemt) {
+            mixer.SetInputWeight(currentElement.Value, 1 - weight);
+            mixer.SetInputWeight(nextElenemt.Value, weight);
         }
-        private void ChangeAnimation() {
-            currentAnimationNode = currentAnimationNode.Next;
+
+        private void ChangeAnimation(LinkedListNode<AnimationClipPlayable> nextElenemt) {
+            currentAnimationNode.Value.SetTime(0);
+            currentAnimationNode.Value.Pause();
+            currentAnimationNode = nextElenemt;
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
+            currentAnimationNode.Value.Play();
             SetNewTransitionTime();
         }
 
         private void SetNewTransitionTime() {
             nextTransitionTime = Time.time +
-                (float)currentAnimationNode.Value.GetAnimationClip().length *
+                currentAnimationNode.Value.GetAnimationClip().length *
                 StartTransitionMultiplier;
 
             currentAnimationEndTime = Time.time +
-                (float)currentAnimationNode.Value.GetAnimationClip().length;
+                currentAnimationNode.Value.GetAnimationClip().length;
         }
 
         private void OnDestroy() {
