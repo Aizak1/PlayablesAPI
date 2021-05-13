@@ -87,7 +87,7 @@ namespace animator {
                 }
 
                 if (Time.time > currentAnimationEndTime) {
-                    ChangeAnimation(currentAnimationNode, nextAnimationNode);
+                    ChangeAnimation(nextAnimationNode);
                     return;
                 }
 
@@ -106,8 +106,7 @@ namespace animator {
             mixer.SetInputWeight(nextElenemt.Value, weight);
         }
 
-        private void ChangeAnimation(LinkedListNode<AnimationClipPlayable> currentElenemt,
-            LinkedListNode<AnimationClipPlayable> nextElenemt) {
+        private void ChangeAnimation(LinkedListNode<AnimationClipPlayable> nextElenemt) {
             mixer.SetInputWeight(currentAnimationNode.Value, 0);
 
             currentAnimationNode = nextElenemt;
