@@ -32,38 +32,24 @@ namespace animator {
 
         private void Start() {
             animationList = new LinkedList<AnimationClipPlayable>();
-
             graph = PlayableGraph.Create();
             graph.Play();
 
             mixer = AnimationMixerPlayable.Create(graph);
-
             AnimationPlayableOutput animOutput =
                 AnimationPlayableOutput.Create(graph, "output", GetComponent<Animator>());
+
             source = animOutput.GetSourceOutputPort();
             animOutput.SetSourcePlayable(mixer);
-
 
             if (jsonFile != null) {
                 animatorData = JsonUtility.FromJson<AnimatorData>(jsonFile.text);
             }
 
-            if (animatorData.startTransitionMultiplier == 0) {
-                animatorData.startTransitionMultiplier = 1;
-            }
-
+            ValidateStartTransitionMultiplier();
 
             possiblePlayables = new AnimationClipPlayable[animatorData.animationsName.Length];
-            for (int i = 0; i < animatorData.animationsName.Length; i++) {
-                var clip = resource.animationPairs[animatorData.animationsName[i]];
-
-                if (clip == null) {
-                    ShowException("There is such animation in resources");
-                }
-
-                possiblePlayables[i] = AnimationClipPlayable.Create(graph, clip);
-                possiblePlayables[i].Pause();
-            }
+            FindAllPossiblePlayables(possiblePlayables);
 
             if (animatorData.isRandom) {
                 InsertRandomPlayable();
@@ -71,57 +57,23 @@ namespace animator {
                 return;
             }
 
-
-            if (animatorData.sequence == null || animatorData.sequence.Length == 0) {
-                foreach (var item in possiblePlayables) {
-                    animationList.AddLast(item);
-                }
-            } else {
-                foreach (var number in animatorData.sequence) {
-                    var animationPosition = number - 1;
-                    if (animationPosition >= possiblePlayables.Length) {
-                        ShowException("Invalid sequence");
-                    }
-
-                    animationList.AddLast(possiblePlayables[animationPosition]);
-
-                }
-            }
+            FillAnimationListBySequence(possiblePlayables,animatorData.sequence);
 
             if (animationList.Count == 0) {
                 ShowException("AnimationClips list is empty");
             }
-
 
             foreach (var item in animationList) {
                 mixer.AddInput(item, source);
             }
 
             FirstAnimationSetUp();
-
-        }
-
-        private void FirstAnimationSetUp() {
-            currentAnimationNode = animationList.First;
-            mixer.SetInputWeight(currentAnimationNode.Value, 1);
-            currentAnimationNode.Value.Play();
-            SetNewTransitionTime();
         }
 
         private void Update() {
             if (Time.time >= nextTransitionTime) {
-                if (currentAnimationNode.Next == null) {
-                    if (animatorData.isRandom) {
-                        InsertRandomPlayable();
-                        nextAnimationNode = animationList.Last;
-                    } else if (animatorData.isLooping) {
-                        nextAnimationNode = animationList.First;
-                    } else {
-                        return;
-                    }
-                } else {
-                    nextAnimationNode = currentAnimationNode.Next;
-                }
+
+                   CalculateNextAnimationNode();
 
                 if (Time.time > currentAnimationEndTime) {
                     ChangeAnimation(nextAnimationNode);
@@ -140,6 +92,75 @@ namespace animator {
             }
         }
 
+
+        private void CalculateNextAnimationNode() {
+            if (currentAnimationNode.Next != null) {
+                nextAnimationNode = currentAnimationNode.Next;
+                return;
+            }
+
+            if (animatorData.isRandom) {
+                InsertRandomPlayable();
+                nextAnimationNode = animationList.Last;
+                return;
+            }
+
+            if (animatorData.isLooping) {
+                nextAnimationNode = animationList.First;
+            }
+        }
+
+        private void ValidateStartTransitionMultiplier() {
+            var value = animatorData.startTransitionMultiplier;
+            if (value <= 0 || value > 1) {
+                animatorData.startTransitionMultiplier = 1;
+            }
+        }
+
+        private void FindAllPossiblePlayables(AnimationClipPlayable[] possiblePlayables) {
+            for (int i = 0; i < animatorData.animationsName.Length; i++) {
+                var clip = resource.animationPairs[animatorData.animationsName[i]];
+
+                if (clip == null) {
+                    ShowException("There is such animation in resources");
+                }
+
+                possiblePlayables[i] = AnimationClipPlayable.Create(graph, clip);
+                possiblePlayables[i].Pause();
+            }
+        }
+
+        private void FillAnimationListBySequence(
+          AnimationClipPlayable[] possiblePlayables,
+          int[] sequence
+          ) {
+            if (sequence == null || sequence.Length == 0) {
+
+                foreach (var item in possiblePlayables) {
+                    animationList.AddLast(item);
+                }
+
+            } else {
+                foreach (var number in sequence) {
+                    var animationPosition = number - 1;
+                    if (animationPosition >= possiblePlayables.Length) {
+                        ShowException("Invalid sequence");
+                    }
+
+                    animationList.AddLast(possiblePlayables[animationPosition]);
+
+                }
+            }
+        }
+
+        private void FirstAnimationSetUp() {
+            currentAnimationNode = animationList.First;
+            mixer.SetInputWeight(currentAnimationNode.Value, 1);
+            currentAnimationNode.Value.Play();
+            SetNewTransitionTime();
+        }
+
+
         private void SpreadWeight(float weight,
             LinkedListNode<AnimationClipPlayable> currentElement,
             LinkedListNode<AnimationClipPlayable> nextElenemt
@@ -150,10 +171,9 @@ namespace animator {
 
         private void ChangeAnimation(LinkedListNode<AnimationClipPlayable> nextElenemt) {
             mixer.SetInputWeight(currentAnimationNode.Value, 0);
-
             currentAnimationNode = nextElenemt;
-
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
+
             currentAnimationNode.Value.SetTime(0);
             currentAnimationNode.Value.Play();
 
@@ -174,6 +194,7 @@ namespace animator {
             enabled = false;
             Debug.LogError(exceptionText);
         }
+
         private void InsertRandomPlayable() {
             if(possiblePlayables==null || possiblePlayables.Length == 0) {
                 return;
