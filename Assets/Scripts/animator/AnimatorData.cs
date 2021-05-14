@@ -10,6 +10,7 @@ namespace animator {
         public int[] sequence;
         public float startTransitionMultiplier;
         public bool isLooping;
+        public bool isRandom;
     }
 }
 

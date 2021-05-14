@@ -15,8 +15,6 @@ namespace animator {
         private Resource resource;
         [SerializeField]
         private AnimatorData animatorData;
-        [SerializeField]
-        private bool isRandom;
 
         private AnimationClipPlayable[] possiblePlayables;
         private LinkedListNode<AnimationClipPlayable> currentAnimationNode;
@@ -67,8 +65,7 @@ namespace animator {
                 possiblePlayables[i].Pause();
             }
 
-            if (isRandom) {
-                InsertRandomPlayable();
+            if (animatorData.isRandom) {
                 InsertRandomPlayable();
                 FirstAnimationSetUp();
                 return;
@@ -114,7 +111,10 @@ namespace animator {
         private void Update() {
             if (Time.time >= nextTransitionTime) {
                 if (currentAnimationNode.Next == null) {
-                    if (animatorData.isLooping) {
+                    if (animatorData.isRandom) {
+                        InsertRandomPlayable();
+                        nextAnimationNode = animationList.Last;
+                    } else if (animatorData.isLooping) {
                         nextAnimationNode = animationList.First;
                     } else {
                         return;
@@ -124,8 +124,12 @@ namespace animator {
                 }
 
                 if (Time.time > currentAnimationEndTime) {
-
                     ChangeAnimation(nextAnimationNode);
+
+                    if (animatorData.isRandom) {
+                        currentAnimationNode.Previous.Value.Destroy();
+                    }
+
                     return;
                 }
 
@@ -146,10 +150,7 @@ namespace animator {
 
         private void ChangeAnimation(LinkedListNode<AnimationClipPlayable> nextElenemt) {
             mixer.SetInputWeight(currentAnimationNode.Value, 0);
-            if (isRandom) {
-                InsertRandomPlayable();
-                currentAnimationNode.Value.Destroy();
-            }
+
             currentAnimationNode = nextElenemt;
 
             mixer.SetInputWeight(currentAnimationNode.Value, 1);
@@ -157,8 +158,6 @@ namespace animator {
             currentAnimationNode.Value.Play();
 
             SetNewTransitionTime();
-
-
 
         }
 
