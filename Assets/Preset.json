@@ -1,7 +1,20 @@
 {
-  "animationsName": [ "Clapping", "Silly Dancing", "Flair", "Punching Bag", "Spin In Place" ],
-  "sequence": [2,1,4,3,5],
-  "startTransitionMultiplier": 0.7,
-  "isLooping": "true",
-  "isRandom": "true"
+  "inputNodes": [
+    {
+      "animation": "Clapping",
+      "transitionDuration": 0.5
+    },
+    {
+      "animation": "Silly Dancing",
+      "transitionDuration": 0.5
+    },
+    {
+      "animation": "Clapping",
+      "transitionDuration": 0.5
+    },
+    {
+      "animation": "Silly Dancing",
+      "transitionDuration": 0.5
+    }
+  ]
 }

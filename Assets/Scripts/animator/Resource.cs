@@ -3,16 +3,10 @@ using UnityEngine;
 
 
 namespace animator {
-    public class Resource : MonoBehaviour {
-        [SerializeField] private  AnimationClip[] animations;
-        public Dictionary<string, AnimationClip> animationPairs;
 
-        private void Awake() {
-            animationPairs = new Dictionary<string, AnimationClip>();
-            foreach (var item in animations) {
-                animationPairs.Add(item.name, item);
-            }
-        }
+    public class Resource : MonoBehaviour {
+        public Dictionary<string, AnimationClip> animationPairs
+            = new Dictionary<string, AnimationClip>();
     }
 }
 
