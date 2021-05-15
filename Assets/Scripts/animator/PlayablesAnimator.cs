@@ -5,10 +5,12 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 
-namespace animator {
+namespace animator
+{
 
     [RequireComponent(typeof(Animator))]
-    public class PlayablesAnimator : MonoBehaviour {
+    public class PlayablesAnimator : MonoBehaviour
+    {
 
         [SerializeField]
         private Resource resource;
@@ -27,7 +29,8 @@ namespace animator {
 
         public bool isLooping;
 
-        private void Start() {
+        private void Start()
+        {
             graph = PlayableGraph.Create();
             mixer = AnimationMixerPlayable.Create(graph);
             AnimationPlayableOutput animOutput =
@@ -38,17 +41,21 @@ namespace animator {
 
             animationList = new PlayableNodeList();
 
-            foreach (var item in graphData.inputNodes) {
+            foreach (var item in graphData.inputNodes)
+            {
                 var clip = resource.animationPairs[item.animation];
                 var playableClip = AnimationClipPlayable.Create(graph, clip);
+                playableClip.SetTime(clip.length);
                 animationList.Add(playableClip, item.transitionDuration);
             }
 
-            foreach (var item in animationList) {
+            foreach (var item in animationList)
+            {
                 mixer.AddInput(item.PlayableClip, source);
             }
 
-            if (isLooping) {
+            if (isLooping)
+            {
                 animationList.Tail.Next = animationList.Head;
             }
             currentNode = animationList.Head;
@@ -56,27 +63,31 @@ namespace animator {
 
             var duration = currentNode.TransitionDuration;
             var length = currentNode.PlayableClip.GetAnimationClip().length;
+            currentNode.PlayableClip.SetTime(0);
             startTransitionTime = CalculateTransitionStartTime(length, duration);
-
 
             graph.Play();
         }
 
-        private void Update() {
+        private void Update()
+        {
             float time = (float)currentNode.PlayableClip.GetTime();
-            if (time >= startTransitionTime) {
+            if (time >= startTransitionTime)
+            {
                 var nextNode = CalculateNextAnimationNode(currentNode);
-                if (nextNode == null) {
+                if (nextNode == null)
+                {
                     return;
                 }
 
-                if (time > startTransitionTime + currentNode.TransitionDuration) {
-                    nextNode.PlayableClip.SetTime(0);
+                if (time > startTransitionTime + currentNode.TransitionDuration)
+                {
                     currentNode = MoveOnNextNode(currentNode, nextNode);
 
                     var duration = currentNode.TransitionDuration;
                     var length = currentNode.PlayableClip.GetAnimationClip().length;
                     startTransitionTime = CalculateTransitionStartTime(length, duration);
+                    currentNode.PlayableClip.SetTime(0);
                     return;
                 }
 
@@ -86,32 +97,36 @@ namespace animator {
             }
         }
 
-        private PlayableNode CalculateNextAnimationNode(PlayableNode currentNode) {
-            if (currentNode.Next != null) {
-                var length = currentNode.Next.PlayableClip.GetAnimationClip().length;
-                currentNode.Next.PlayableClip.SetTime(length);
+        private PlayableNode CalculateNextAnimationNode(PlayableNode currentNode)
+        {
+            if (currentNode.Next != null)
+            {
                 return currentNode.Next;
             }
             return null;
         }
 
-        private void SpreadWeight(float weight, PlayableNode currentNode, PlayableNode nextNode) {
+        private void SpreadWeight(float weight, PlayableNode currentNode, PlayableNode nextNode)
+        {
             mixer.SetInputWeight(currentNode.PlayableClip, 1 - weight);
             mixer.SetInputWeight(nextNode.PlayableClip, weight);
         }
 
-        private PlayableNode MoveOnNextNode(PlayableNode currentNode, PlayableNode nextNode) {
+        private PlayableNode MoveOnNextNode(PlayableNode currentNode, PlayableNode nextNode)
+        {
             mixer.SetInputWeight(currentNode.PlayableClip, 0);
             mixer.SetInputWeight(nextNode.PlayableClip, 1);
 
             return nextNode;
         }
 
-        private float CalculateTransitionStartTime(float length,float transitionDuration) {
+        private float CalculateTransitionStartTime(float length, float transitionDuration)
+        {
             return length - transitionDuration;
         }
 
-        private void OnDestroy() {
+        private void OnDestroy()
+        {
             graph.Destroy();
         }
     }
