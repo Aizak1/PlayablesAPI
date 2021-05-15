@@ -9,6 +9,7 @@ namespace animator {
     public struct Preset {
         public PlayableNodeList AnimationList;
         public Modificators Modificators;
+        public int[] weights;
     }
 
     [RequireComponent(typeof(Animator))]
@@ -58,6 +59,7 @@ namespace animator {
 
                 presets[CurrentPresetIndex].AnimationList = animationList;
                 presets[CurrentPresetIndex].Modificators = data.modificators;
+                presets[CurrentPresetIndex].weights = data.weights;
 
                 CurrentPresetIndex++;
             }
@@ -129,11 +131,41 @@ namespace animator {
                 return presets[NextPresetIndex].AnimationList.Head;
             }
 
+            if (presets[CurrentPresetIndex].Modificators.isRandom) {
+                return TakeRandomNode(currentNode, presets[CurrentPresetIndex]);
+            }
+
             if (currentNode.Next != null) {
                 return currentNode.Next;
             }
 
             return null;
+        }
+
+        private PlayableNode TakeRandomNode(PlayableNode currentNode,Preset currentPreset) {
+            int sum = 0;
+            int currentNodeIndex = currentPreset.AnimationList.FindNodeIndex(currentNode);
+            for (int i = 0; i < currentPreset.weights.Length; i++) {
+                if (i == currentNodeIndex) {
+                    continue;
+                }
+                sum += currentPreset.weights[i];
+            }
+
+            int index = 0;
+            int randomNumber = Random.Range(0, sum + 1);
+            int weight = 0;
+            for (int i = 0; i < currentPreset.weights.Length; i++) {
+                if (i == currentNodeIndex) {
+                    continue;
+                }
+                weight += currentPreset.weights[i];
+                if (randomNumber < weight) {
+                    index = i;
+                    break;
+                }
+            }
+            return currentPreset.AnimationList.FindNode(index);
         }
 
         private void SpreadWeight(float weight, PlayableNode currentNode, PlayableNode nextNode) {

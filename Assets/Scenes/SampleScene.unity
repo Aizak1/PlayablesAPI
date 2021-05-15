@@ -322,6 +322,7 @@ MonoBehaviour:
     modificators:
       isLooping: 0
       isRandom: 0
+    weights: 
   - inputNodes:
     - animation: Silly Dancing
       transitionDuration: 0.5
@@ -332,6 +333,7 @@ MonoBehaviour:
     modificators:
       isLooping: 1
       isRandom: 0
+    weights: 
   CurrentPresetIndex: 0
   NextPresetIndex: 0
 --- !u!114 &838713091

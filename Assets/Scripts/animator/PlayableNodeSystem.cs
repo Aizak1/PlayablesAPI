@@ -36,7 +36,7 @@ namespace animator {
             Count++;
         }
 
-        public PlayableNode FindPlayableNode(int index) {
+        public PlayableNode FindNode(int index) {
             if (index > Count) {
                 return null;
             }
@@ -46,6 +46,16 @@ namespace animator {
                 current = current.Next;
             }
             return current;
+        }
+
+        public int FindNodeIndex(PlayableNode node) {
+            int index = 0;
+            var current = Head;
+            while (current!=node) {
+                current = current.Next;
+                index++;
+            }
+            return index;
         }
 
         public IEnumerator<PlayableNode> GetEnumerator() {

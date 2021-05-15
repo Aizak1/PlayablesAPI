@@ -4,6 +4,7 @@ namespace animator {
     public struct GraphData {
         public NodeSetting[] inputNodes;
         public Modificators modificators;
+        public int[] weights;
     }
 
     [System.Serializable]

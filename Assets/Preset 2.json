@@ -1,0 +1,21 @@
+{
+  "inputNodes": [
+    {
+      "animation": "Clapping",
+      "transitionDuration": 0.5
+    },
+    {
+      "animation": "Silly Dancing",
+      "transitionDuration": 0.5
+    },
+    {
+      "animation": "Flair",
+      "transitionDuration": 0.5
+    }
+  ],
+  "modificators":{
+    "isLooping": false,
+    "isRandom":true
+  },
+  "weights":[70,30,20]
+}
