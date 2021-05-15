@@ -6,6 +6,10 @@ using UnityEngine.Playables;
 
 
 namespace animator {
+    public struct Preset {
+        public PlayableNodeList AnimationList;
+        public Modificators Modificators;
+    }
 
     [RequireComponent(typeof(Animator))]
     public class PlayablesAnimator : MonoBehaviour {
@@ -13,19 +17,23 @@ namespace animator {
         [SerializeField]
         private Resource resource;
 
-        public GraphData graphData;
+        [SerializeField]
+        private float presetTransitionTime;
 
         private PlayableGraph graph;
         private AnimationMixerPlayable mixer;
 
-        private PlayableNodeList animationList;
+        private Preset[] presets;
         private PlayableNode currentNode;
+        private PlayableNode nextNode;
 
         private float startTransitionTime;
+        private float endTransitionTime;
 
-        private int source;
+        public List<GraphData> GraphDatas;
 
-        public bool isLooping;
+        public int CurrentPresetIndex = 0;
+        public int NextPresetIndex = 0;
 
         private void Start() {
             graph = PlayableGraph.Create();
@@ -33,28 +41,76 @@ namespace animator {
             AnimationPlayableOutput animOutput =
                 AnimationPlayableOutput.Create(graph, "output", GetComponent<Animator>());
 
-            source = animOutput.GetSourceOutputPort();
+            int source = animOutput.GetSourceOutputPort();
             animOutput.SetSourcePlayable(mixer);
 
-            animationList = CreateAnimationList(graphData, resource);
+            presets = new Preset[GraphDatas.Count];
+            foreach (var data in GraphDatas) {
+                PlayableNodeList animationList = CreateAnimationList(data, resource);
 
-            foreach (var item in animationList) {
-                mixer.AddInput(item.PlayableClip, source);
+                foreach (var item in animationList) {
+                    mixer.AddInput(item.PlayableClip, source);
+                }
+
+                if (data.modificators.isLooping) {
+                    animationList.Tail.Next = animationList.Head;
+                }
+
+                presets[CurrentPresetIndex].AnimationList = animationList;
+                presets[CurrentPresetIndex].Modificators = data.modificators;
+
+                CurrentPresetIndex++;
             }
 
-            if (isLooping) {
-                animationList.Tail.Next = animationList.Head;
-            }
-
-            currentNode = animationList.Head;
+            CurrentPresetIndex = 0;
+            currentNode = presets[CurrentPresetIndex].AnimationList.Head;
             mixer.SetInputWeight(currentNode.PlayableClip, 1);
             currentNode.PlayableClip.SetTime(0);
 
             var duration = currentNode.TransitionDuration;
             var length = currentNode.PlayableClip.GetAnimationClip().length;
             startTransitionTime = CalculateTransitionStartTime(length, duration);
+            endTransitionTime = length;
 
             graph.Play();
+        }
+
+        private void Update() {
+            float time = (float)currentNode.PlayableClip.GetTime();
+
+            if (nextNode == null) {
+                nextNode = TakeNextNode(currentNode);
+                if (NextPresetIndex != CurrentPresetIndex) {
+
+                    var length = currentNode.PlayableClip.GetAnimationClip().length;
+                    var transitionTime = presetTransitionTime;
+                    startTransitionTime = CalculateTransitionStartTime(length, transitionTime);
+                    CurrentPresetIndex = NextPresetIndex;
+
+                }
+            }
+
+            if (time >= startTransitionTime && nextNode != null) {
+                if (time > endTransitionTime) {
+
+                    currentNode = MoveOnNextNode(currentNode, nextNode);
+                    nextNode = null;
+
+                    var duration = currentNode.TransitionDuration;
+                    var length = currentNode.PlayableClip.GetAnimationClip().length;
+                    startTransitionTime = CalculateTransitionStartTime(length, duration);
+                    endTransitionTime = length;
+
+                    currentNode.PlayableClip.SetTime(0);
+
+                    return;
+                }
+
+                float weight = (time - startTransitionTime) /
+                        (endTransitionTime - startTransitionTime);
+
+                SpreadWeight(weight, currentNode, nextNode);
+            }
         }
 
         private PlayableNodeList CreateAnimationList(GraphData graphData, Resource resource) {
@@ -68,34 +124,15 @@ namespace animator {
             return animationList;
         }
 
-        private void Update() {
-            float time = (float)currentNode.PlayableClip.GetTime();
-            if (time >= startTransitionTime) {
-                var nextNode = CalculateNextAnimationNode(currentNode);
-                if (nextNode == null) {
-                    return;
-                }
-
-                if (time > startTransitionTime + currentNode.TransitionDuration) {
-                    currentNode = MoveOnNextNode(currentNode, nextNode);
-
-                    var duration = currentNode.TransitionDuration;
-                    var length = currentNode.PlayableClip.GetAnimationClip().length;
-                    startTransitionTime = CalculateTransitionStartTime(length, duration);
-                    currentNode.PlayableClip.SetTime(0);
-                    return;
-                }
-
-                float weight = (time - startTransitionTime) / currentNode.TransitionDuration;
-
-                SpreadWeight(weight, currentNode, nextNode);
+        private PlayableNode TakeNextNode(PlayableNode currentNode) {
+            if (NextPresetIndex != CurrentPresetIndex) {
+                return presets[NextPresetIndex].AnimationList.Head;
             }
-        }
 
-        private PlayableNode CalculateNextAnimationNode(PlayableNode currentNode) {
             if (currentNode.Next != null) {
                 return currentNode.Next;
             }
+
             return null;
         }
 
@@ -113,6 +150,12 @@ namespace animator {
 
         private float CalculateTransitionStartTime(float length, float transitionDuration) {
             return length - transitionDuration;
+        }
+
+        public void SwitchPreset(int index) {
+            if (index >= 0 && index < presets.Length) {
+                NextPresetIndex = index;
+            }
         }
 
         private void OnDestroy() {

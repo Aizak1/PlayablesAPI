@@ -16,5 +16,8 @@
       "animation": "Silly Dancing",
       "transitionDuration": 0.5
     }
-  ]
+  ],
+  "modificators":{
+    "isLooping": true
+  }
 }

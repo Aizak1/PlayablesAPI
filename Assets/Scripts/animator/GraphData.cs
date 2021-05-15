@@ -3,6 +3,7 @@ namespace animator {
     [System.Serializable]
     public struct GraphData {
         public NodeSetting[] inputNodes;
+        public Modificators modificators;
     }
 
     [System.Serializable]

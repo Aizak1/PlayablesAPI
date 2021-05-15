@@ -1,0 +1,20 @@
+{
+  "inputNodes": [
+    {
+      "animation": "Falling",
+      "transitionDuration": 1
+    },
+    {
+      "animation": "Spin In Place",
+      "transitionDuration": 0
+    },
+    {
+      "animation": "Falling",
+      "transitionDuration": 1
+    },
+    {
+      "animation": "Spin In Place",
+      "transitionDuration": 0.5
+    }
+  ]
+}

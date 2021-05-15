@@ -310,9 +310,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resource: {fileID: 1524342003}
-  graphData:
-    inputNodes: []
-  isLooping: 1
+  presetTransitionTime: 0.5
+  GraphDatas:
+  - inputNodes:
+    - animation: Clapping
+      transitionDuration: 0.5
+    - animation: Flair
+      transitionDuration: 0.3
+    - animation: Punching Bag
+      transitionDuration: 0.5
+    modificators:
+      isLooping: 0
+      isRandom: 0
+  - inputNodes:
+    - animation: Silly Dancing
+      transitionDuration: 0.5
+    - animation: Flair
+      transitionDuration: 0.3
+    - animation: Falling
+      transitionDuration: 0.5
+    modificators:
+      isLooping: 1
+      isRandom: 0
+  CurrentPresetIndex: 0
+  NextPresetIndex: 0
+--- !u!114 &838713091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 838713088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 060be3e1259f7904e84358638bab8754, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nextPresetCode: 273
+  previousPresetCode: 274
+  animator: {fileID: 838713090}
 --- !u!114 &838713092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,7 +362,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playablesAnimator: {fileID: 838713090}
-  jsonFile: {fileID: 4900000, guid: 5a1cd32c3196c7245b0d4f401e642d13, type: 3}
+  jsonFiles:
+  - {fileID: 4900000, guid: 5a1cd32c3196c7245b0d4f401e642d13, type: 3}
+  - {fileID: 4900000, guid: 534ffa5922d0fea4a86834cd64b8b44f, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

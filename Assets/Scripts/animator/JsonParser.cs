@@ -7,14 +7,18 @@ namespace animator {
         [SerializeField]
         private PlayablesAnimator playablesAnimator;
         [SerializeField]
-        private TextAsset jsonFile;
+        private TextAsset[] jsonFiles;
         private void Awake() {
-            if (jsonFile == null) {
+            if (jsonFiles == null) {
                 Debug.LogError("There is no jsonFile");
                 enabled = false;
                 return;
             }
-            playablesAnimator.graphData = JsonUtility.FromJson<GraphData>(jsonFile.text);
+            playablesAnimator.GraphDatas.Clear();
+            foreach (var file in jsonFiles) {
+                var graphData = JsonUtility.FromJson<GraphData>(file.text);
+                playablesAnimator.GraphDatas.Add(graphData);
+            }
         }
     }
 }
