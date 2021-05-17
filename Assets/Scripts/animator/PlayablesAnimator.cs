@@ -9,7 +9,7 @@ namespace animator {
     public struct Preset {
         public PlayableNodeList AnimationList;
         public Modificators Modificators;
-        public int[] weights;
+        public List<int> randomWeights;
     }
 
     [RequireComponent(typeof(Animator))]
@@ -23,6 +23,7 @@ namespace animator {
 
         private PlayableGraph graph;
         private AnimationMixerPlayable mixer;
+        private int source;
 
         private Preset[] presets;
         private PlayableNode currentNode;
@@ -42,7 +43,7 @@ namespace animator {
             AnimationPlayableOutput animOutput =
                 AnimationPlayableOutput.Create(graph, "output", GetComponent<Animator>());
 
-            int source = animOutput.GetSourceOutputPort();
+            source = animOutput.GetSourceOutputPort();
             animOutput.SetSourcePlayable(mixer);
 
             presets = new Preset[GraphDatas.Count];
@@ -59,7 +60,7 @@ namespace animator {
 
                 presets[CurrentPresetIndex].AnimationList = animationList;
                 presets[CurrentPresetIndex].Modificators = data.modificators;
-                presets[CurrentPresetIndex].weights = data.weights;
+                presets[CurrentPresetIndex].randomWeights = data.randomWeights;
 
                 CurrentPresetIndex++;
             }
@@ -118,12 +119,17 @@ namespace animator {
         private PlayableNodeList CreateAnimationList(GraphData graphData, Resource resource) {
             PlayableNodeList animationList = new PlayableNodeList();
             foreach (var item in graphData.inputNodes) {
-                var clip = resource.animationPairs[item.animation];
-                var playableClip = AnimationClipPlayable.Create(graph, clip);
-                playableClip.SetTime(clip.length);
+                AnimationClipPlayable playableClip = CreatePlayableClip(resource, item);
                 animationList.Add(playableClip, item.transitionDuration);
             }
             return animationList;
+        }
+
+        private AnimationClipPlayable CreatePlayableClip(Resource resource, NodeSetting setting) {
+            var clip = resource.animationPairs[setting.animation];
+            var playableClip = AnimationClipPlayable.Create(graph, clip);
+            playableClip.SetTime(clip.length);
+            return playableClip;
         }
 
         private PlayableNode TakeNextNode(PlayableNode currentNode) {
@@ -145,22 +151,22 @@ namespace animator {
         private PlayableNode TakeRandomNode(PlayableNode currentNode,Preset currentPreset) {
             int sum = 0;
             int currentNodeIndex = currentPreset.AnimationList.FindNodeIndex(currentNode);
-            for (int i = 0; i < currentPreset.weights.Length; i++) {
+            for (int i = 0; i < currentPreset.randomWeights.Count; i++) {
                 if (i == currentNodeIndex) {
                     continue;
                 }
-                sum += currentPreset.weights[i];
+                sum += currentPreset.randomWeights[i];
             }
 
             int index = 0;
             int randomNumber = Random.Range(0, sum + 1);
-            int weight = 0;
-            for (int i = 0; i < currentPreset.weights.Length; i++) {
+            int randomWeight = 0;
+            for (int i = 0; i < currentPreset.randomWeights.Count; i++) {
                 if (i == currentNodeIndex) {
                     continue;
                 }
-                weight += currentPreset.weights[i];
-                if (randomNumber < weight) {
+                randomWeight += currentPreset.randomWeights[i];
+                if (randomNumber < randomWeight) {
                     index = i;
                     break;
                 }
@@ -188,6 +194,23 @@ namespace animator {
             if (index >= 0 && index < presets.Length) {
                 NextPresetIndex = index;
             }
+        }
+
+        public void AddNodeAtPosition(
+            int presetIndex, int position, NodeSetting nodeSetting, int randomWeight
+            ) {
+            var playableClip = CreatePlayableClip(resource, nodeSetting);
+            var duration = nodeSetting.transitionDuration;
+            presets[presetIndex].AnimationList.Add(playableClip, duration, position);
+            if (presets[presetIndex].Modificators.isLooping) {
+                var tail = presets[presetIndex].AnimationList.Tail;
+                var head = presets[presetIndex].AnimationList.Head;
+                tail.Next = head;
+            }
+            if (presets[presetIndex].Modificators.isRandom) {
+                presets[presetIndex].randomWeights.Insert(position, randomWeight);
+            }
+            mixer.AddInput(playableClip, source);
         }
 
         private void OnDestroy() {

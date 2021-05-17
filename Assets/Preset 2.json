@@ -17,5 +17,5 @@
     "isLooping": false,
     "isRandom":true
   },
-  "weights":[70,30,20]
+  "randomWeights":[70,30,20]
 }

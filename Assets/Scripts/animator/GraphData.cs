@@ -1,10 +1,12 @@
 
+using System.Collections.Generic;
+
 namespace animator {
     [System.Serializable]
     public struct GraphData {
         public NodeSetting[] inputNodes;
         public Modificators modificators;
-        public int[] weights;
+        public List<int> randomWeights;
     }
 
     [System.Serializable]

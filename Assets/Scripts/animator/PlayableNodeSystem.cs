@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Animations;
 
 namespace animator {
@@ -24,8 +25,8 @@ namespace animator {
             Tail = null;
             Count = 0;
         }
-        public void Add(AnimationClipPlayable playable, float transitionTime) {
-            var node = new PlayableNode(playable, transitionTime);
+        public void Add(AnimationClipPlayable playable, float transitionDuration) {
+            var node = new PlayableNode(playable, transitionDuration);
             if (Tail != null) {
                 Tail.Next = node;
                 Tail = node;
@@ -34,6 +35,18 @@ namespace animator {
                 Tail = node;
             }
             Count++;
+        }
+
+        public void Add(AnimationClipPlayable playable, float transitionDuration, int index) {
+            var newNode = new PlayableNode(playable, transitionDuration);
+            index = Mathf.Clamp(index, 1, Count);
+            PlayableNode previousNode = FindNode(index - 1);
+            if (previousNode == null || previousNode == Tail) {
+                Add(playable, transitionDuration);
+            } else {
+                newNode.Next = previousNode.Next;
+                previousNode.Next = newNode;
+            }
         }
 
         public PlayableNode FindNode(int index) {
