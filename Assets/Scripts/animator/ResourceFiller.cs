@@ -12,7 +12,7 @@ namespace animator{
 
         private void Awake() {
             foreach (var item in animationClips) {
-                resourceToFill.animationPairs.Add(item.name,item);
+                resourceToFill.animations.Add(item.name,item);
             }
         }
     }
