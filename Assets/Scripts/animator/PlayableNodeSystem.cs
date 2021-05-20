@@ -5,13 +5,10 @@ using UnityEngine.Playables;
 
 namespace animator {
     public class PlayableNode {
-        public  Playable Playable;
+        public AnimationClipPlayable PlayableClip;
         public float TransitionDuration;
+        public Playable Parent;
         public PlayableNode Next;
 
-        public PlayableNode(AnimationClipPlayable playable, float transitionDuration) {
-            Playable = playable;
-            TransitionDuration = transitionDuration;
-        }
     }
 }

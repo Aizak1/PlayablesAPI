@@ -1,0 +1,18 @@
+{
+    "FirstNodeName": "main",
+    "Commands":
+        {
+            "AddInput":{
+                "AnimationInput":{
+                    "Parent": "main",
+                    "AnimationClip":{
+                        "Name":"Clapping",
+                        "TransitionDuration":0.5
+                    }
+
+                }
+            }
+        }
+    
+
+}

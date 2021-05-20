@@ -310,7 +310,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resource: {fileID: 1524342003}
-  presetTransitionTime: 0.5
 --- !u!114 &838713091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -339,9 +338,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playablesAnimator: {fileID: 838713090}
-  jsonFiles:
-  - {fileID: 4900000, guid: 5a1cd32c3196c7245b0d4f401e642d13, type: 3}
-  - {fileID: 4900000, guid: 534ffa5922d0fea4a86834cd64b8b44f, type: 3}
+  jsonFile: {fileID: 4900000, guid: 0e3c7d8f39c148a4ca56ef8b22b67720, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
