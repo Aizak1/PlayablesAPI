@@ -18,18 +18,32 @@ namespace animator {
 
         private PlayableNode rootNode;
         private PlayableNode currentNode;
+        private PlayableNode nextNode;
 
         private void Update() {
+            if (currentNode == null) {
+                return;
+            }
+
             if (controller.OpenCircle.HasValue) {
-                controller.OpenCircle.Value.Play(currentNode);
+                currentNode = controller.OpenCircle.Value.UpdateNodeState(currentNode);
+
             } else if (controller.CloseCircle.HasValue) {
+                currentNode = controller.CloseCircle.Value.UpdateNodeState(currentNode, rootNode);
 
             } else if (controller.Random.HasValue) {
-
+                if (nextNode == null || nextNode == currentNode) {
+                    nextNode = new PlayableNode();
+                    nextNode = controller.Random.Value.GetRandomNode(currentNode, rootNode);
+                }
+                currentNode = controller.Random.Value.UpdateNodeState(currentNode, nextNode);
             }
         }
 
         public void Setup(string firstNodeName, Command[] commands) {
+            if (graph.IsValid()) {
+                graph.Destroy();
+            }
             Animator animator = GetComponent<Animator>();
             graph = PlayableGraph.Create();
             var mainMixer = AnimationLayerMixerPlayable.Create(graph);
@@ -41,6 +55,7 @@ namespace animator {
             int source = output.GetSourceOutputPort();
             output.SetSourcePlayable(mainMixer);
 
+            nextNode = null;
             currentNode = new PlayableNode();
             rootNode = currentNode;
 
@@ -52,18 +67,23 @@ namespace animator {
                         Playable parent = parents[inputAnim.Parent];
 
                         if (inputAnim.AnimationClip.HasValue) {
+                            if (!rootNode.PlayableClip.IsNull()) {
+                                currentNode.Next = new PlayableNode();
+                                currentNode = currentNode.Next;
+                            }
+
                             string name = inputAnim.AnimationClip.Value.Name;
                             float duration = inputAnim.AnimationClip.Value.TransitionDuration;
                             AnimationClip clip = resource.animations[name];
                             AnimationClipPlayable animation =
                                 AnimationClipPlayable.Create(graph, clip);
                             parent.AddInput(animation, source);
+                            float length = animation.GetAnimationClip().length;
 
                             currentNode.Parent = parent;
                             currentNode.PlayableClip = animation;
                             currentNode.TransitionDuration = duration;
-                            currentNode.Next = new PlayableNode();
-                            currentNode = currentNode.Next;
+                            currentNode.PlayableClip.SetTime(length);
 
                         } else if (inputAnim.AnimationMixer.HasValue) {
                             string name = inputAnim.AnimationMixer.Value.Name;
@@ -80,16 +100,20 @@ namespace animator {
                     }
 
                 } else if (commands[i].AddContoller.HasValue) {
-                    AnimationController controller = commands[i].AddContoller.Value.Controller;
-                    this.controller = controller;
+                    controller = commands[i].AddContoller.Value.Controller;
                 }
             }
-            rootNode.Parent.SetInputWeight(rootNode.PlayableClip, 1);
+
+            currentNode = rootNode;
+            currentNode.PlayableClip.SetTime(0);
+            currentNode.Parent.SetInputWeight(currentNode.PlayableClip, 1);
             graph.Play();
         }
 
         private void OnDestroy() {
-            graph.Destroy();
+            if (graph.IsValid()) {
+                graph.Destroy();
+            }
         }
     }
 }

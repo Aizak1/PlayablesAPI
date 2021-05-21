@@ -1,0 +1,1 @@
+{"FirstNodeName":"main","Commands":[{"AddInput":{"AnimationClip":{"Name":"Clapping","TransitionDuration":0,5},"Parent":"main"}},{"AddInput":{"AnimationClip":{"Name":"Flair","TransitionDuration":1},"Parent":"main2"}}]}

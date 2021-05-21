@@ -57,25 +57,84 @@ namespace animator {
     public struct OpenCircleController {
         public WeightController WeightController;
 
-        public void Play(PlayableNode current) {
-            if (WeightController.IsTimeToMakeTransition(current)) {
+        public PlayableNode UpdateNodeState(PlayableNode current) {
+            if (current.Next == null) {
+                return null;
+            }
+
+            if (WeightController.IsEndOfTransition(current)) {
+                current = WeightController.MoveOnNextNode(current);
+
+            } else if (WeightController.IsTimeToMakeTransition(current)) {
                 WeightController.MakeTransition(current, current.Next);
             }
-            if (WeightController.IsEndOfTransition(current) && current.Next != null) {
-                current = current.Next;
-            }
+
+            return current;
         }
     }
 
     [System.Serializable]
     public struct CloseCircleController {
         public WeightController WeightController;
+
+        public PlayableNode UpdateNodeState(PlayableNode current, PlayableNode root) {
+            if (current.Next == null) {
+                current.Next = root;
+            }
+
+            if (WeightController.IsEndOfTransition(current)) {
+                current = WeightController.MoveOnNextNode(current);
+
+            } else if (WeightController.IsTimeToMakeTransition(current)) {
+                WeightController.MakeTransition(current, current.Next);
+            }
+
+            return current;
+        }
     }
 
     [System.Serializable]
     public struct RandomController {
         public WeightController WeightController;
         public int[] Weights;
+
+        public PlayableNode UpdateNodeState(PlayableNode current, PlayableNode next) {
+            if (WeightController.IsTimeToMakeTransition(current)) {
+                WeightController.MakeTransition(current, next);
+
+                if (WeightController.IsEndOfTransition(current)) {
+                    current = WeightController.MoveOnNextNode(current, next);
+                }
+            }
+
+            return current;
+        }
+
+        public PlayableNode GetRandomNode(PlayableNode current, PlayableNode root) {
+            int sum = 0;
+            PlayableNode node = new PlayableNode {
+                Next = root.Next,
+                Parent = root.Parent,
+                PlayableClip = root.PlayableClip,
+                TransitionDuration = root.TransitionDuration
+            };
+
+            for (int i = 0; i < Weights.Length; i++) {
+                 sum += Weights[i];
+            }
+
+            int randomNumber = Random.Range(0, sum + 1);
+            int randomWeight = 0;
+
+            for (int i = 0; i < Weights.Length; i++) {
+                randomWeight += Weights[i];
+                if (randomNumber < randomWeight) {
+                    break;
+                }
+                node = node.Next;
+            }
+            return node;
+        }
     }
 
     [System.Serializable]
@@ -120,9 +179,19 @@ namespace animator {
 
             return false;
         }
+
+        public PlayableNode MoveOnNextNode(PlayableNode current) {
+            current = current.Next;
+            current.PlayableClip.SetTime(0);
+            return current;
+        }
+
+        public PlayableNode MoveOnNextNode(PlayableNode current,PlayableNode next) {
+            current = next;
+            current.PlayableClip.SetTime(0);
+            return current;
+        }
     }
-
-
 }
 
 
