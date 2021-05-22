@@ -14,20 +14,15 @@ namespace animator {
 
     [System.Serializable]
     public struct AddInputCommand {
-        public AnimationInput? AnimationInput;
+        public string Parent;
+        public AnimationClipInput? AnimationClip;
+        public AnimationMixerInput? AnimationMixer;
+        public AnimationLayerMixerInput? AnimationLayerMixer;
     }
 
     [System.Serializable]
     public struct AddControllerCommand {
         public AnimationController Controller;
-    }
-
-    [System.Serializable]
-    public struct AnimationInput {
-        public string Parent;
-        public AnimationClipInput? AnimationClip;
-        public AnimationMixerInput? AnimationMixer;
-        public AnimationLayerMixerInput? AnimationLayerMixer;
     }
 
     [System.Serializable]
@@ -96,7 +91,7 @@ namespace animator {
     [System.Serializable]
     public struct RandomController {
         public WeightController WeightController;
-        public int[] Weights;
+        public List<int> Weights;
 
         public PlayableNode UpdateNodeState(PlayableNode current, PlayableNode next) {
             if (WeightController.IsTimeToMakeTransition(current)) {
@@ -119,14 +114,14 @@ namespace animator {
                 TransitionDuration = root.TransitionDuration
             };
 
-            for (int i = 0; i < Weights.Length; i++) {
+            for (int i = 0; i < Weights.Count; i++) {
                  sum += Weights[i];
             }
 
             int randomNumber = Random.Range(0, sum + 1);
             int randomWeight = 0;
 
-            for (int i = 0; i < Weights.Length; i++) {
+            for (int i = 0; i < Weights.Count; i++) {
                 randomWeight += Weights[i];
                 if (randomNumber < randomWeight) {
                     break;

@@ -1,0 +1,39 @@
+{
+    "InputData":{
+        "FirstNodeName":"main",
+        "Commands":[
+            {
+                "AddInput":{
+                    "AnimationClip":{
+                        "Name":"Clapping",
+                        "TransitionDuration":0.5
+                    },
+                    "Parent":"main"
+                }
+            },{
+                "AddInput":{
+                    "AnimationClip":{
+                        "Name":"Flair",
+                        "TransitionDuration":0.3
+                    },
+                    "Parent":"main"
+                }
+            },{
+                "AddInput":{
+                    "AnimationClip":{
+                        "Name":"Silly Dancing",
+                        "TransitionDuration":0.5
+                    },
+                    "Parent":"main"
+                }
+            },{
+                "AddController":{
+                    "Controller":{
+                        "CloseCircle":{
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}
