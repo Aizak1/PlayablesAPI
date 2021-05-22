@@ -6,49 +6,51 @@ using UnityEngine.Playables;
 
 namespace animator {
 
-    [System.Serializable]
     public struct Command {
         public AddInputCommand? AddInput;
         public AddControllerCommand? AddContoller;
     }
 
-    [System.Serializable]
     public struct AddInputCommand {
         public string Parent;
         public AnimationClipInput? AnimationClip;
         public AnimationMixerInput? AnimationMixer;
         public AnimationLayerMixerInput? AnimationLayerMixer;
+        public AnimationJobInput? AnimationJob;
     }
 
-    [System.Serializable]
+    public struct AnimationJobInput {
+        public string Name;
+        public LookAtJobInput? LookAtJob;
+    }
+
+    public struct LookAtJobInput {
+
+    }
+
     public struct AddControllerCommand {
         public AnimationController Controller;
     }
 
-    [System.Serializable]
     public struct AnimationClipInput {
         public string Name;
         public float TransitionDuration;
     }
 
-    [System.Serializable]
     public struct AnimationMixerInput {
         public string Name;
     }
 
-    [System.Serializable]
     public struct AnimationLayerMixerInput {
         public string Name;
     }
 
-    [System.Serializable]
     public struct AnimationController {
         public OpenCircleController? OpenCircle;
         public CloseCircleController? CloseCircle;
         public RandomController? Random;
     }
 
-    [System.Serializable]
     public struct OpenCircleController {
         public WeightController WeightController;
 
@@ -68,7 +70,6 @@ namespace animator {
         }
     }
 
-    [System.Serializable]
     public struct CloseCircleController {
         public WeightController WeightController;
 
@@ -88,7 +89,6 @@ namespace animator {
         }
     }
 
-    [System.Serializable]
     public struct RandomController {
         public WeightController WeightController;
         public List<int> Weights;
@@ -132,7 +132,6 @@ namespace animator {
         }
     }
 
-    [System.Serializable]
     public struct WeightController {
         private void SpreadWeight(float weight, PlayableNode current, PlayableNode next) {
             current.Parent.SetInputWeight(current.PlayableClip, 1 - weight);

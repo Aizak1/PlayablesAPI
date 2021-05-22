@@ -20,6 +20,7 @@ namespace animator {
         private PlayableNode currentNode;
         private PlayableNode nextNode;
 
+
         private void Update() {
             if (currentNode == null) {
                 return;
@@ -95,6 +96,8 @@ namespace animator {
                         Playable playable = AnimationLayerMixerPlayable.Create(graph);
                         parents.Add(name, playable);
                         parent.AddInput(playable, source);
+                    } else if (inputCommand.AnimationJob.HasValue) {
+
                     }
 
                 } else if (commands[i].AddContoller.HasValue) {
