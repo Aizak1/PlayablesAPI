@@ -22,9 +22,13 @@ namespace animator {
     public struct AnimationJobInput {
         public string Name;
         public LookAtJobInput? LookAtJob;
+        public TwoBoneIKJobInput? TwoBoneIKJob;
     }
 
     public struct LookAtJobInput {
+
+    }
+    public struct TwoBoneIKJobInput {
 
     }
 

@@ -49,6 +49,7 @@ namespace animator {
             }
             Animator animator = GetComponent<Animator>();
             graph = PlayableGraph.Create();
+            graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
             var mainMixer = AnimationLayerMixerPlayable.Create(graph);
 
             Dictionary<string, Playable> parents = new Dictionary<string, Playable>();
@@ -99,12 +100,12 @@ namespace animator {
                         parents.Add(name, playable);
                         parent.AddInput(playable, source);
                     } else if (inputCommand.AnimationJob.HasValue) {
+
                         var job = inputCommand.AnimationJob.Value;
                         string jobName = job.Name;
-                        if (job.LookAtJob.HasValue) {
-                            graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-                            animator.fireEvents = false;
 
+                        if (job.LookAtJob.HasValue) {
+                            animator.fireEvents = false;
                             var lookAtSettings = jobsSettings.LookAtSettings;
                             var targetTransform = lookAtSettings.Target.transform;
                             var axisVector = lookAtSettings.GetAxisVector(lookAtSettings.Axis);
@@ -120,6 +121,21 @@ namespace animator {
                             Playable lookAt = AnimationScriptPlayable.Create(graph, lookAtJob);
                             parents.Add(jobName, lookAt);
                             parent.AddInput(lookAt, source);
+                        }else if (job.TwoBoneIKJob.HasValue) {
+
+                            var endJoint = jobsSettings.TwoBoneIKSettings.EndJoint;
+                            var effector = jobsSettings.TwoBoneIKSettings.EffectorModel;
+                            Transform midJoint = endJoint.parent;
+                            Transform topJoint = midJoint.parent;
+                            var obj = Instantiate(effector, endJoint.position, endJoint.rotation);
+                            var twoBoneIKJob = new TwoBoneIKJob();
+
+                            var tranform = obj.transform;
+                            twoBoneIKJob.Setup(animator, topJoint, midJoint, endJoint, tranform);
+
+                            Playable twoBone = AnimationScriptPlayable.Create(graph, twoBoneIKJob);
+                            parents.Add(jobName, twoBone);
+                            parent.AddInput(twoBone, source);
                         }
                     }
 

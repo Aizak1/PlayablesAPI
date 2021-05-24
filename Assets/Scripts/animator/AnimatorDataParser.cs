@@ -36,6 +36,7 @@ namespace animator {
         private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
         private const string ANIMATION_JOB = "AnimationJob";
         private const string LOOK_AT_JOB = "LookAtJob";
+        private const string TWOBONE_IK_JOB = "TwoBoneIKJob";
 
         private void Update() {
             if (Input.GetKeyDown(KeyCode.Space)) {
@@ -317,6 +318,8 @@ namespace animator {
                     }
                     if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
                         animationJobInput.LookAtJob = new LookAtJobInput();
+                    }else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
+                        animationJobInput.TwoBoneIKJob = new TwoBoneIKJobInput();
                     }
                     animInput.AnimationJob = animationJobInput;
                 }

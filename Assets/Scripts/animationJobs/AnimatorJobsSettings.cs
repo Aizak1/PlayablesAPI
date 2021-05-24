@@ -14,6 +14,7 @@ namespace animationJobs {
     [System.Serializable]
     public struct AnimatorJobsSettings {
         public LookAtJobSettings LookAtSettings;
+        public TwoBoneIKJobSettings TwoBoneIKSettings;
     }
     [System.Serializable]
     public struct LookAtJobSettings {
@@ -42,6 +43,12 @@ namespace animationJobs {
             return Vector3.forward;
         }
 
+    }
+
+    [System.Serializable]
+    public struct TwoBoneIKJobSettings {
+        public Transform EndJoint;
+        public GameObject EffectorModel;
     }
 
 }

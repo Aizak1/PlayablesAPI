@@ -417,6 +417,9 @@ MonoBehaviour:
       Target: {fileID: 586697920}
       MinAngle: -60
       MaxAngle: 60
+    TwoBoneIKSettings:
+      EndJoint: {fileID: 1548265391}
+      EffectorModel: {fileID: 5435089144418742525, guid: 286b96c716e7bfc45a46fbaa98558c88, type: 3}
 --- !u!114 &838713091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -668,6 +671,11 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1548265391 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1824824446595371411, guid: 848edfe5ff9a62642a99e468763ad199, type: 3}
+  m_PrefabInstance: {fileID: 838713087}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2038153995
 GameObject:
   m_ObjectHideFlags: 0
