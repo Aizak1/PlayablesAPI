@@ -93,7 +93,8 @@ public struct FullBodyIKJob : IAnimationJob
 
     private void SetEffector(AnimationStream stream, AvatarIKGoal goal, ref EffectorHandle handle)
     {
-        if (handle.effector.IsValid(stream) && handle.positionWeight.IsValid(stream) && handle.rotationWeight.IsValid(stream))
+        if (handle.effector.IsValid(stream) &&
+            handle.positionWeight.IsValid(stream) && handle.rotationWeight.IsValid(stream))
         {
             AnimationHumanStream humanStream = stream.AsHuman();
             humanStream.SetGoalPosition(goal, handle.effector.GetPosition(stream));
@@ -103,7 +104,8 @@ public struct FullBodyIKJob : IAnimationJob
         }
     }
 
-    private void SetHintEffector(AnimationStream stream, AvatarIKHint goal, ref HintEffectorHandle handle)
+    private void SetHintEffector(AnimationStream stream,
+        AvatarIKHint goal, ref HintEffectorHandle handle)
     {
         if (handle.hint.IsValid(stream) && handle.weight.IsValid(stream))
         {
@@ -192,7 +194,6 @@ public struct FullBodyIKJob : IAnimationJob
 
         NativeArray<LimbPart> limbParts = new NativeArray<LimbPart>(4, Allocator.Temp);
         PrepareSolvePull(stream, limbParts);
-        
         for (int iter = 0; iter < maxPullIteration; iter++)
         {
             Vector3 deltaPosition = Vector3.zero;
@@ -205,9 +206,11 @@ public struct FullBodyIKJob : IAnimationJob
 
                 localForce.Normalize();
 
-                var force = Mathf.Max( limbParts[goalIter].stiffness * (currentLenght - restLenght), 0.0f);
+                var force = Mathf.Max( limbParts[goalIter].stiffness *
+                    (currentLenght - restLenght), 0.0f);
 
-                deltaPosition += (localForce * force * limbParts[goalIter].goalPullWeight * limbParts[goalIter].goalWeight);
+                deltaPosition += (localForce * force * limbParts[goalIter]
+                    .goalPullWeight * limbParts[goalIter].goalWeight);
             }
 
             deltaPosition /= (maxPullIteration - iter);

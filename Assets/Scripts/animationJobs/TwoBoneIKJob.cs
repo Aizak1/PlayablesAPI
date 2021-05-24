@@ -15,7 +15,8 @@ public struct TwoBoneIKJob : IAnimationJob
     public TransformStreamHandle mid;
     public TransformStreamHandle low;
 
-    public void Setup(Animator animator, Transform topX, Transform midX, Transform lowX, Transform effectorX)
+    public void Setup(Animator animator, Transform topX, Transform midX, Transform lowX,
+        Transform effectorX)
     {
         top = animator.BindStreamTransform(topX);
         mid = animator.BindStreamTransform(midX);
@@ -45,11 +46,14 @@ public struct TwoBoneIKJob : IAnimationJob
     {
         float aLen1 = v1.magnitude;
         float aLen2 = v2.magnitude;
-        float c = Mathf.Clamp((aLen1 * aLen1 + aLen2 * aLen2 - aLen * aLen) / (aLen1 * aLen2) / 2.0f, -1.0f, 1.0f);
+        float c = Mathf.Clamp((aLen1 * aLen1 + aLen2 * aLen2 - aLen * aLen) /
+            (aLen1 * aLen2) / 2.0f, -1.0f, 1.0f);
         return Mathf.Acos(c);
     }
 
-    private static void Solve(AnimationStream stream, TransformStreamHandle topHandle, TransformStreamHandle midHandle, TransformStreamHandle lowHandle, TransformSceneHandle effectorHandle)
+    private static void Solve(AnimationStream stream, TransformStreamHandle topHandle,
+        TransformStreamHandle midHandle, TransformStreamHandle lowHandle,
+        TransformSceneHandle effectorHandle)
     {
         Quaternion aRotation = topHandle.GetRotation(stream);
         Quaternion bRotation = midHandle.GetRotation(stream);

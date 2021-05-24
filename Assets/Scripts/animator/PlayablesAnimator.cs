@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
+using animationJobs;
 
 
 namespace animator {
@@ -12,7 +13,8 @@ namespace animator {
 
         [SerializeField]
         private Resource resource;
-
+        [SerializeField]
+        private AnimatorJobsSettings jobsSettings;
         private PlayableGraph graph;
         private AnimationController controller;
 
@@ -97,7 +99,28 @@ namespace animator {
                         parents.Add(name, playable);
                         parent.AddInput(playable, source);
                     } else if (inputCommand.AnimationJob.HasValue) {
+                        var job = inputCommand.AnimationJob.Value;
+                        string jobName = job.Name;
+                        if (job.LookAtJob.HasValue) {
+                            graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
+                            animator.fireEvents = false;
 
+                            var lookAtSettings = jobsSettings.LookAtSettings;
+                            var targetTransform = lookAtSettings.Target.transform;
+                            var axisVector = lookAtSettings.GetAxisVector(lookAtSettings.Axis);
+
+                            var lookAtJob = new LookAtJob() {
+                                joint = animator.BindStreamTransform(lookAtSettings.Joint),
+                                target = animator.BindSceneTransform(targetTransform),
+                                axis = axisVector,
+                                maxAngle = lookAtSettings.MaxAngle,
+                                minAngle = lookAtSettings.MinAngle
+                            };
+
+                            Playable lookAt = AnimationScriptPlayable.Create(graph, lookAtJob);
+                            parents.Add(jobName, lookAt);
+                            parent.AddInput(lookAt, source);
+                        }
                     }
 
                 } else if (commands[i].AddContoller.HasValue) {

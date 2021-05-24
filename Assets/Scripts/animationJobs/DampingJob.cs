@@ -75,10 +75,12 @@ public struct DampingJob : IAnimationJob
 
             // Apply damping on this target.
             var velocity = velocities[i];
-            newPosition = Vector3.SmoothDamp(positions[i], newPosition, ref velocity, 0.15f, Mathf.Infinity, stream.deltaTime);
+            newPosition = Vector3.SmoothDamp(positions[i], newPosition,
+                ref velocity, 0.15f, Mathf.Infinity, stream.deltaTime);
 
             // Apply constraint: keep original length between joints.
-            newPosition = parentPosition + (newPosition - parentPosition).normalized * localPositions[i].magnitude;
+            newPosition = parentPosition +
+                (newPosition - parentPosition).normalized * localPositions[i].magnitude;
 
             // Save new velocity and position for next frame.
             velocities[i] = velocity;

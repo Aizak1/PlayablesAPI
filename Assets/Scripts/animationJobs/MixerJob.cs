@@ -19,7 +19,8 @@ public struct MixerJob : IAnimationJob
         var streamB = stream.GetInputStream(1);
 
         var velocity = Vector3.Lerp(streamA.velocity, streamB.velocity, weight);
-        var angularVelocity = Vector3.Lerp(streamA.angularVelocity, streamB.angularVelocity, weight);
+        var angularVelocity = Vector3.Lerp(streamA.angularVelocity, streamB.angularVelocity,
+            weight);
         stream.velocity = velocity;
         stream.angularVelocity = angularVelocity;
     }

@@ -34,6 +34,8 @@ namespace animator {
         private const string TRANSITION_DURATION = "TransitionDuration";
         private const string ANIMATION_MIXER = "AnimationMixer";
         private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
+        private const string ANIMATION_JOB = "AnimationJob";
+        private const string LOOK_AT_JOB = "LookAtJob";
 
         private void Update() {
             if (Input.GetKeyDown(KeyCode.Space)) {
@@ -303,6 +305,20 @@ namespace animator {
                 } else {
                     Debug.LogError("Animation Layer Mixer field is Empty");
                     return null;
+                }
+            } else if (inputItem.ContainsKey(ANIMATION_JOB)) {
+                if (inputItem[ANIMATION_JOB].Obj.IsSome()) {
+                    var animationJobDict = inputItem[ANIMATION_JOB].Obj.Peel();
+                    var animationJobInput = new AnimationJobInput();
+                    if (animationJobDict.ContainsKey(NAME)) {
+                        if (animationJobDict[NAME].Str.IsSome()) {
+                            animationJobInput.Name = animationJobDict[NAME].Str.Peel();
+                        }
+                    }
+                    if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
+                        animationJobInput.LookAtJob = new LookAtJobInput();
+                    }
+                    animInput.AnimationJob = animationJobInput;
                 }
             } else {
                 Debug.LogError("Unknown AnimationInput");
