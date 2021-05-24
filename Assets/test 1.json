@@ -31,7 +31,7 @@
                 "AddInput":{
                     "AnimationClip":{
                         "Name":"Flair",
-                        "TransitionDuration":0.5
+                        "TransitionDuration":-0.5
                     },
                     "Parent":"mixer1"
                 }
