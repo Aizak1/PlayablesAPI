@@ -267,6 +267,18 @@ namespace animator {
 
             animationInput.Parent = animInputDict[PARENT].Str.Peel();
 
+            if (!animInputDict.ContainsKey(NAME)) {
+                Debug.LogError("No Parent field");
+                return null;
+            }
+
+            if (animInputDict[NAME].Str.IsNone()) {
+                Debug.LogError("Parent field is empty");
+                return null;
+            }
+
+            animationInput.Name = animInputDict[NAME].Str.Peel();
+
 
             if (animInputDict.ContainsKey(ANIMATION_CLIP)) {
 
@@ -277,18 +289,6 @@ namespace animator {
 
                 var animClip = animInputDict[ANIMATION_CLIP].Obj.Peel();
                 var animationClipInput = new AnimationClipInput();
-
-                if (!animClip.ContainsKey(NAME)) {
-                    Debug.LogError("No Animation Name field");
-                    return null;
-                }
-
-                if (animClip[NAME].Str.IsNone()) {
-                    Debug.LogError("Animation Name field is empty");
-                    return null;
-                }
-
-                animationClipInput.Name = animClip[NAME].Str.Peel();
 
                 if (!animClip.ContainsKey(TRANSITION_DURATION)) {
                     Debug.LogError("No Animation Transition Duration field");
@@ -313,49 +313,13 @@ namespace animator {
 
             } else if (animInputDict.ContainsKey(ANIMATION_MIXER)) {
 
-                if (animInputDict[ANIMATION_MIXER].Obj.IsNone()) {
-                    Debug.LogError("Animation Mixer field is Empty");
-                    return null;
-                }
-
-                var animMixer = animInputDict[ANIMATION_MIXER].Obj.Peel();
                 var animationMixerInput = new AnimationMixerInput();
-
-                if (!animMixer.ContainsKey(NAME)) {
-                    Debug.LogError("No Animation Mixer Name field");
-                    return null;
-                }
-
-                if (animMixer[NAME].Str.IsNone()) {
-                    Debug.LogError("Animation Mixer Name field is Empty");
-                    return null;
-                }
-
-                animationMixerInput.Name = animMixer[NAME].Str.Peel();
                 animationInput.AnimationMixer = animationMixerInput;
                 animInput.AnimationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_LAYER_MIXER)) {
 
-                if (animInputDict[ANIMATION_LAYER_MIXER].Obj.IsNone()) {
-                    Debug.LogError("Animation Layer Mixer field is Empty");
-                    return null;
-                }
-
-                var animLayerMixer = animInputDict[ANIMATION_LAYER_MIXER].Obj.Peel();
                 var animationMixerLayerInput = new AnimationLayerMixerInput();
-
-                if (!animLayerMixer.ContainsKey(NAME)) {
-                    Debug.LogError("No Animation Layer Mixer Name field");
-                    return null;
-                }
-
-                if (animLayerMixer[NAME].Str.IsNone()) {
-                    Debug.LogError("Animation Layer Mixer Name field is Empty");
-                    return null;
-                }
-
-                animationMixerLayerInput.Name = animLayerMixer[NAME].Str.Peel();
                 animationInput.AnimationLayerMixer = animationMixerLayerInput;
                 animInput.AnimationInput = animationInput;
 
@@ -368,18 +332,6 @@ namespace animator {
 
                 var animationJobDict = animInputDict[ANIMATION_JOB].Obj.Peel();
                 var animationJobInput = new AnimationJobInput();
-
-                if (!animationJobDict.ContainsKey(NAME)) {
-                    Debug.LogError("No Animation Job Name field");
-                    return null;
-                }
-
-                if (animationJobDict[NAME].Str.IsNone()) {
-                    Debug.LogError("Animation Job Name field is Empty");
-                    return null;
-                }
-
-                animationJobInput.Name = animationJobDict[NAME].Str.Peel();
 
                 if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
                     animationJobInput.LookAtJob = new LookAtJobInput();

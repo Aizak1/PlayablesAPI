@@ -66,17 +66,15 @@ namespace animator {
             for (int i = 0; i < commands.Count; i++) {
                 if (commands[i].AddInput.HasValue) {
                     AddInputCommand inputCommand = commands[i].AddInput.Value;
-
                     var animationInput = inputCommand.AnimationInput;
                     Playable parent = parents[animationInput.Parent];
+                    string name = animationInput.Name;
 
                     if (animationInput.AnimationClip.HasValue) {
                         if (!rootNode.PlayableClip.IsNull()) {
                             currentNode.Next = new PlayableNode();
                             currentNode = currentNode.Next;
                         }
-
-                        string name = animationInput.AnimationClip.Value.Name;
                         float duration = animationInput.AnimationClip.Value.TransitionDuration;
                         AnimationClip clip = resource.animations[name];
                         AnimationClipPlayable animation =
@@ -90,20 +88,18 @@ namespace animator {
                         currentNode.PlayableClip.SetTime(length);
 
                     } else if (animationInput.AnimationMixer.HasValue) {
-                        string name = animationInput.AnimationMixer.Value.Name;
                         Playable playable = AnimationMixerPlayable.Create(graph);
                         parents.Add(name, playable);
                         parent.AddInput(playable, source);
 
                     } else if (animationInput.AnimationLayerMixer.HasValue) {
-                        string name = animationInput.AnimationLayerMixer.Value.Name;
                         Playable playable = AnimationLayerMixerPlayable.Create(graph);
                         parents.Add(name, playable);
                         parent.AddInput(playable, source);
                     } else if (animationInput.AnimationJob.HasValue) {
 
                         var job = animationInput.AnimationJob.Value;
-                        string jobName = job.Name;
+                        string jobName = name;
 
                         if (job.LookAtJob.HasValue) {
                             animator.fireEvents = false;

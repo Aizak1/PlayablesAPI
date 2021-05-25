@@ -6,9 +6,9 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "Name":"Clapping",
                             "TransitionDuration":0.5
                         },
+                        "Name":"Clapping",
                         "Parent":"main"
                     }
                     
@@ -17,9 +17,9 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "Name":"Flair",
                             "TransitionDuration":0.3
                         },
+                        "Name":"Flair",
                         "Parent":"main"
                     }
                    
@@ -28,9 +28,9 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "Name":"Silly Dancing",
                             "TransitionDuration":0.5
                         },
+                        "Name":"Silly Dancing",
                         "Parent":"main"
                     }
                 }

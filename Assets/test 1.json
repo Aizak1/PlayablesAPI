@@ -6,10 +6,11 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationJob":{
-                            "Name":"job",
+
                             "LookAtJob":{
                             }
                         },
+                        "Name":"job",
                         "Parent":"main"
                     }
                     
@@ -19,8 +20,9 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationMixer":{
-                            "Name":"mixer1"
+                           
                         },
+                        "Name":"mixer1",
                         "Parent":"job"
                     }
                     
@@ -29,9 +31,9 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "Name":"Silly Dancing",
                             "TransitionDuration":0.5
                         },
+                        "Name":"Silly Dancing",
                         "Parent":"mixer1"
                     }
                     
@@ -40,9 +42,9 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "Name":"Flair",
                             "TransitionDuration":0.5
                         },
+                        "Name":"Flair",
                         "Parent":"mixer1"
                     }
                     
