@@ -22,6 +22,7 @@ namespace animator {
         private PlayableNode currentNode;
         private PlayableNode nextNode;
 
+        Dictionary<string, PlayableParent> parents;
 
         private void Update() {
             if (currentNode == null) {
@@ -43,23 +44,16 @@ namespace animator {
             }
         }
 
-        public void Setup(string firstNodeName, List<Command> commands) {
+        public void Setup(List<Command> commands) {
             if (graph.IsValid()) {
                 graph.Destroy();
             }
             Animator animator = GetComponent<Animator>();
             graph = PlayableGraph.Create();
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-            var mainMixer = AnimationLayerMixerPlayable.Create(graph);
-
-            Dictionary<string, Playable> parents = new Dictionary<string, Playable>();
-            parents.Add(firstNodeName, mainMixer);
-
-            var output = AnimationPlayableOutput.Create(graph, firstNodeName, animator);
-            int source = output.GetSourceOutputPort();
-            output.SetSourcePlayable(mainMixer);
 
             nextNode = null;
+            parents = new Dictionary<string, PlayableParent>();
             currentNode = new PlayableNode();
             rootNode = currentNode;
 
@@ -67,7 +61,7 @@ namespace animator {
                 if (commands[i].AddInput.HasValue) {
                     AddInputCommand inputCommand = commands[i].AddInput.Value;
                     var animationInput = inputCommand.AnimationInput;
-                    Playable parent = parents[animationInput.Parent];
+                    PlayableParent parent = parents[animationInput.Parent];
                     string name = animationInput.Name;
 
                     if (animationInput.AnimationClip.HasValue) {
@@ -79,7 +73,7 @@ namespace animator {
                         AnimationClip clip = resource.animations[name];
                         AnimationClipPlayable animation =
                             AnimationClipPlayable.Create(graph, clip);
-                        parent.AddInput(animation, source);
+                        ConnectNodeToParent(parent, animation);
                         float length = animation.GetAnimationClip().length;
 
                         currentNode.Parent = parent;
@@ -88,14 +82,23 @@ namespace animator {
                         currentNode.PlayableClip.SetTime(length);
 
                     } else if (animationInput.AnimationMixer.HasValue) {
+
                         Playable playable = AnimationMixerPlayable.Create(graph);
-                        parents.Add(name, playable);
-                        parent.AddInput(playable, source);
+                        var playableParent = new PlayableParent();
+                        playableParent.inputParent = playable;
+                        parents.Add(name, playableParent);
+
+                        ConnectNodeToParent(parent, playable);
 
                     } else if (animationInput.AnimationLayerMixer.HasValue) {
                         Playable playable = AnimationLayerMixerPlayable.Create(graph);
-                        parents.Add(name, playable);
-                        parent.AddInput(playable, source);
+
+                        var playableParent = new PlayableParent();
+                        playableParent.inputParent = playable;
+                        parents.Add(name, playableParent);
+
+                        ConnectNodeToParent(parent, playable);
+
                     } else if (animationInput.AnimationJob.HasValue) {
 
                         var job = animationInput.AnimationJob.Value;
@@ -116,9 +119,14 @@ namespace animator {
                             };
 
                             Playable lookAt = AnimationScriptPlayable.Create(graph, lookAtJob);
-                            parents.Add(jobName, lookAt);
-                            parent.AddInput(lookAt, source);
-                        }else if (job.TwoBoneIKJob.HasValue) {
+
+                            var playableParent = new PlayableParent();
+                            playableParent.inputParent = lookAt;
+                            parents.Add(name, playableParent);
+
+                            ConnectNodeToParent(parent, lookAt);
+
+                        } else if (job.TwoBoneIKJob.HasValue) {
 
                             var endJoint = jobsSettings.TwoBoneIKSettings.EndJoint;
                             var effector = jobsSettings.TwoBoneIKSettings.EffectorModel;
@@ -131,20 +139,45 @@ namespace animator {
                             twoBoneIKJob.Setup(animator, topJoint, midJoint, endJoint, tranform);
 
                             Playable twoBone = AnimationScriptPlayable.Create(graph, twoBoneIKJob);
-                            parents.Add(jobName, twoBone);
-                            parent.AddInput(twoBone, source);
+
+                            var playableParent = new PlayableParent();
+                            playableParent.inputParent = twoBone;
+                            parents.Add(name, playableParent);
+
+                            ConnectNodeToParent(parent, twoBone);
                         }
                     }
 
                 } else if (commands[i].AddContoller.HasValue) {
                     controller = commands[i].AddContoller.Value.Controller;
+                } else if (commands[i].AddOutput.HasValue) {
+
+                    var animOutput = commands[i].AddOutput.Value.AnimationOutput;
+                    string outputName = animOutput.Name;
+                    var playableOut= AnimationPlayableOutput.Create(graph, outputName, animator);
+                    var parentPlayable = new PlayableParent();
+                    parentPlayable.outputParent = playableOut;
+                    parents.Add(outputName, parentPlayable);
+
                 }
             }
 
             currentNode = rootNode;
+            if (currentNode.Parent.inputParent.IsNull()) {
+                currentNode.Parent.outputParent.SetWeight(1);
+            } else {
+                currentNode.Parent.inputParent.SetInputWeight(currentNode.PlayableClip, 1);
+            }
             currentNode.PlayableClip.SetTime(0);
-            currentNode.Parent.SetInputWeight(currentNode.PlayableClip, 1);
             graph.Play();
+        }
+
+        private void ConnectNodeToParent(PlayableParent parent, Playable playable) {
+            if (parent.inputParent.IsNull()) {
+                parent.outputParent.SetSourcePlayable(playable);
+            } else {
+                parent.inputParent.AddInput(playable, 0);
+            }
         }
 
         private void OnDestroy() {

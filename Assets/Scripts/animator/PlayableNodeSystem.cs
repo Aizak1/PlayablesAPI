@@ -7,7 +7,7 @@ namespace animator {
     public class PlayableNode {
         public AnimationClipPlayable PlayableClip;
         public float TransitionDuration;
-        public Playable Parent;
+        public PlayableParent Parent;
         public PlayableNode Next;
 
     }

@@ -92,9 +92,13 @@ namespace animator {
     }
 
     public struct WeightController {
+
         private void SpreadWeight(float weight, PlayableNode current, PlayableNode next) {
-            current.Parent.SetInputWeight(current.PlayableClip, 1 - weight);
-            next.Parent.SetInputWeight(next.PlayableClip, weight);
+            if (current.Parent.inputParent.IsNull()) {
+                return;
+            }
+            current.Parent.inputParent.SetInputWeight(current.PlayableClip, 1 - weight);
+            next.Parent.inputParent.SetInputWeight(next.PlayableClip, weight);
         }
 
         public void MakeTransition(PlayableNode current, PlayableNode next) {

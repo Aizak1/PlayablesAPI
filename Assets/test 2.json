@@ -1,0 +1,32 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "Name":"main"
+                    }
+                    
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.3
+                        },
+                        "Name":"Flair",
+                        "Parent":"main"
+                    }
+                   
+                }
+            },{
+                "AddController":{
+                    "Controller":{
+                        "CloseCircle":{
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

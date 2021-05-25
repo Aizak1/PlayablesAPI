@@ -9,7 +9,6 @@ namespace animator {
 
     [System.Serializable]
     public struct InputData {
-        public string firstNodeName;
         public List<Command> commands;
     }
 
@@ -20,10 +19,10 @@ namespace animator {
         private TextAsset jsonFile;
 
         private const string INPUT_DATA = "InputData";
-        private const string FIRST_NODE_NAME = "FirstNodeName";
         private const string COMMANDS = "Commands";
         private const string ADD_INPUT = "AddInput";
         private const string ADD_CONTROLLER = "AddController";
+        private const string ADD_OUTPUT = "AddOutput";
         private const string CONTROLLER = "Controller";
         private const string OPEN_CIRCLE = "OpenCircle";
         private const string CLOSE_CIRCLE = "CloseCircle";
@@ -34,6 +33,7 @@ namespace animator {
         private const string NAME = "Name";
         private const string TRANSITION_DURATION = "TransitionDuration";
         private const string ANIMATION_INPUT = "AnimationInput";
+        private const string ANIMATION_OUTPUT = "AnimationOutput";
         private const string ANIMATION_MIXER = "AnimationMixer";
         private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
         private const string ANIMATION_JOB = "AnimationJob";
@@ -78,9 +78,8 @@ namespace animator {
                 }
 
                 var inputData = optionInputData.Peel();
-                var name = inputData.firstNodeName;
                 var commands = inputData.commands;
-                playablesAnimator.Setup(name, commands);
+                playablesAnimator.Setup(commands);
             }
         }
 
@@ -94,19 +93,6 @@ namespace animator {
             }
 
             var input = json.Obj.Peel();
-
-            if (!input.ContainsKey(FIRST_NODE_NAME)) {
-                Debug.LogError("No FirstNodeName field");
-                return Option<InputData>.None();
-            }
-
-            if (input[FIRST_NODE_NAME].Str.IsNone()) {
-                Debug.LogError("FirstNodeName field is empty");
-                return Option<InputData>.None();
-            }
-
-            string name = input[FIRST_NODE_NAME].Str.Peel();
-            inputData.firstNodeName = name;
 
             if (!input.ContainsKey(COMMANDS)) {
                 Debug.LogError("No Commands field");
@@ -156,11 +142,50 @@ namespace animator {
                 var dict = inputCommand[ADD_CONTROLLER].Obj.Peel();
                 command.AddContoller = GetController(dict);
 
+            }else if (inputCommand.ContainsKey(ADD_OUTPUT)) {
+
+                if (inputCommand[ADD_OUTPUT].Obj.IsNone()) {
+                    Debug.LogError("AddOutput field is empty");
+                    return command;
+                }
+                var dict = inputCommand[ADD_OUTPUT].Obj.Peel();
+                command.AddOutput = GetOutput(dict);
+
             } else {
                 Debug.LogError("Unknown Add command field");
             }
 
+
             return command;
+        }
+
+        private AddOutputCommand? GetOutput(Dictionary<string, JSONType> outputcommandDict) {
+            var addOutputCommand = new AddOutputCommand();
+
+            if (!outputcommandDict.ContainsKey(ANIMATION_OUTPUT)) {
+                Debug.LogError("No AnimationOutput field");
+                return null;
+            }
+
+            if (outputcommandDict[ANIMATION_OUTPUT].Obj.IsNone()) {
+                Debug.LogError("AnimationOutput field is empty");
+                return null;
+            }
+            var outputDict = outputcommandDict[ANIMATION_OUTPUT].Obj.Peel();
+            var animationOutput = new AnimationOutput();
+            if (!outputDict.ContainsKey(NAME)) {
+                Debug.LogError("No Name field");
+                return null;
+            }
+
+            if (outputDict[NAME].Str.IsNone()) {
+                Debug.LogError("Name field is empty");
+                return null;
+            }
+
+            animationOutput.Name = outputDict[NAME].Str.Peel();
+            addOutputCommand.AnimationOutput = animationOutput;
+            return addOutputCommand;
         }
 
         private AddControllerCommand? GetController(Dictionary<string, JSONType> addController) {

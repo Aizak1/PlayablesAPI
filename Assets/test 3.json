@@ -1,26 +1,34 @@
 {
     "InputData":{
-        "FirstNodeName":"main",
         "Commands":[
             {
-                "AddInput":{
-                    "AnimationInput":{
-                        "AnimationClip":{
-                            "TransitionDuration":0.5
-                        },
-                        "Name":"Clapping",
-                        "Parent":"main"
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "Name":"main"
                     }
                     
                 }
             },{
                 "AddInput":{
                     "AnimationInput":{
-                        "AnimationClip":{
-                            "TransitionDuration":0.3
+                        "AnimationJob":{
+                         "LookAtJob":{
+
+                         }
                         },
-                        "Name":"Flair",
+                        "Name":"job",
                         "Parent":"main"
+                    }
+                   
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+
+                        },
+                        "Name":"mixer1",
+                        "Parent":"job"
                     }
                    
                 }
@@ -30,9 +38,21 @@
                         "AnimationClip":{
                             "TransitionDuration":0.5
                         },
-                        "Name":"Silly Dancing",
-                        "Parent":"main"
+                        "Name":"Flair",
+                        "Parent":"mixer1"
                     }
+                   
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5
+                        },
+                        "Name":"Clapping",
+                        "Parent":"mixer1"
+                    }
+                   
                 }
             },{
                 "AddController":{
