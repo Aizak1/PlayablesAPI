@@ -33,6 +33,7 @@ namespace animator {
         private const string ANIMATION_CLIP = "AnimationClip";
         private const string NAME = "Name";
         private const string TRANSITION_DURATION = "TransitionDuration";
+        private const string ANIMATION_INPUT = "AnimationInput";
         private const string ANIMATION_MIXER = "AnimationMixer";
         private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
         private const string ANIMATION_JOB = "AnimationJob";
@@ -241,27 +242,40 @@ namespace animator {
         private AddInputCommand? GetAnimationInput(Dictionary<string, JSONType> inputItem) {
             var animInput = new AddInputCommand();
 
-            if (!inputItem.ContainsKey(PARENT)) {
+            if (!inputItem.ContainsKey(ANIMATION_INPUT)) {
+                Debug.LogError("No AnimationInput field");
+                return null;
+            }
+
+            if (inputItem[ANIMATION_INPUT].Obj.IsNone()) {
+                Debug.LogError("AnimationInput field is empty");
+                return null;
+            }
+
+            var animInputDict = inputItem[ANIMATION_INPUT].Obj.Peel();
+            var animationInput = new AnimationInput();
+
+            if (!animInputDict.ContainsKey(PARENT)) {
                 Debug.LogError("No Parent field");
                 return null;
             }
 
-            if (inputItem[PARENT].Str.IsNone()) {
+            if (animInputDict[PARENT].Str.IsNone()) {
                 Debug.LogError("Parent field is empty");
                 return null;
             }
 
-            animInput.Parent = inputItem[PARENT].Str.Peel();
+            animationInput.Parent = animInputDict[PARENT].Str.Peel();
 
 
-            if (inputItem.ContainsKey(ANIMATION_CLIP)) {
+            if (animInputDict.ContainsKey(ANIMATION_CLIP)) {
 
-                if (inputItem[ANIMATION_CLIP].Obj.IsNone()) {
+                if (animInputDict[ANIMATION_CLIP].Obj.IsNone()) {
                     Debug.LogError("AnimationClip field is empty");
                     return null;
                 }
 
-                var animClip = inputItem[ANIMATION_CLIP].Obj.Peel();
+                var animClip = animInputDict[ANIMATION_CLIP].Obj.Peel();
                 var animationClipInput = new AnimationClipInput();
 
                 if (!animClip.ContainsKey(NAME)) {
@@ -294,17 +308,17 @@ namespace animator {
                 }
 
                 animationClipInput.TransitionDuration = duration;
+                animationInput.AnimationClip = animationClipInput;
+                animInput.AnimationInput = animationInput;
 
-                animInput.AnimationClip = animationClipInput;
+            } else if (animInputDict.ContainsKey(ANIMATION_MIXER)) {
 
-            } else if (inputItem.ContainsKey(ANIMATION_MIXER)) {
-
-                if (inputItem[ANIMATION_MIXER].Obj.IsNone()) {
+                if (animInputDict[ANIMATION_MIXER].Obj.IsNone()) {
                     Debug.LogError("Animation Mixer field is Empty");
                     return null;
                 }
 
-                var animMixer = inputItem[ANIMATION_MIXER].Obj.Peel();
+                var animMixer = animInputDict[ANIMATION_MIXER].Obj.Peel();
                 var animationMixerInput = new AnimationMixerInput();
 
                 if (!animMixer.ContainsKey(NAME)) {
@@ -318,17 +332,17 @@ namespace animator {
                 }
 
                 animationMixerInput.Name = animMixer[NAME].Str.Peel();
+                animationInput.AnimationMixer = animationMixerInput;
+                animInput.AnimationInput = animationInput;
 
-                animInput.AnimationMixer = animationMixerInput;
+            } else if (animInputDict.ContainsKey(ANIMATION_LAYER_MIXER)) {
 
-            } else if (inputItem.ContainsKey(ANIMATION_LAYER_MIXER)) {
-
-                if (inputItem[ANIMATION_LAYER_MIXER].Obj.IsNone()) {
+                if (animInputDict[ANIMATION_LAYER_MIXER].Obj.IsNone()) {
                     Debug.LogError("Animation Layer Mixer field is Empty");
                     return null;
                 }
 
-                var animLayerMixer = inputItem[ANIMATION_LAYER_MIXER].Obj.Peel();
+                var animLayerMixer = animInputDict[ANIMATION_LAYER_MIXER].Obj.Peel();
                 var animationMixerLayerInput = new AnimationLayerMixerInput();
 
                 if (!animLayerMixer.ContainsKey(NAME)) {
@@ -342,17 +356,17 @@ namespace animator {
                 }
 
                 animationMixerLayerInput.Name = animLayerMixer[NAME].Str.Peel();
+                animationInput.AnimationLayerMixer = animationMixerLayerInput;
+                animInput.AnimationInput = animationInput;
 
-                animInput.AnimationLayerMixer = animationMixerLayerInput;
+            } else if (animInputDict.ContainsKey(ANIMATION_JOB)) {
 
-            } else if (inputItem.ContainsKey(ANIMATION_JOB)) {
-
-                if (inputItem[ANIMATION_JOB].Obj.IsNone()) {
+                if (animInputDict[ANIMATION_JOB].Obj.IsNone()) {
                     Debug.LogError("Animation Job field is Empty");
                     return null;
                 }
 
-                var animationJobDict = inputItem[ANIMATION_JOB].Obj.Peel();
+                var animationJobDict = animInputDict[ANIMATION_JOB].Obj.Peel();
                 var animationJobInput = new AnimationJobInput();
 
                 if (!animationJobDict.ContainsKey(NAME)) {
@@ -373,8 +387,8 @@ namespace animator {
                 } else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
                     animationJobInput.TwoBoneIKJob = new TwoBoneIKJobInput();
                 }
-
-                animInput.AnimationJob = animationJobInput;
+                animationInput.AnimationJob = animationJobInput;
+                animInput.AnimationInput = animationInput;
 
             } else {
                 Debug.LogError("Unknown AnimationInput");

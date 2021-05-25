@@ -4,36 +4,48 @@
         "Commands":[
             {
                 "AddInput":{
-                    "AnimationJob":{
-                        "Name":"job",
-                        "LookAtJob":{
-                        }
-                    },
-                    "Parent":"main"
+                    "AnimationInput":{
+                        "AnimationJob":{
+                            "Name":"job",
+                            "LookAtJob":{
+                            }
+                        },
+                        "Parent":"main"
+                    }
+                    
                 }
             },
             {
                 "AddInput":{
-                    "AnimationMixer":{
-                        "Name":"mixer1"
-                    },
-                    "Parent":"job"
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                            "Name":"mixer1"
+                        },
+                        "Parent":"job"
+                    }
+                    
                 }
             },{
                 "AddInput":{
-                    "AnimationClip":{
-                        "Name":"Silly Dancing",
-                        "TransitionDuration":0.5
-                    },
-                    "Parent":"mixer1"
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "Name":"Silly Dancing",
+                            "TransitionDuration":0.5
+                        },
+                        "Parent":"mixer1"
+                    }
+                    
                 }
             },{
                 "AddInput":{
-                    "AnimationClip":{
-                        "Name":"Flair",
-                        "TransitionDuration":-0.5
-                    },
-                    "Parent":"mixer1"
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "Name":"Flair",
+                            "TransitionDuration":0.5
+                        },
+                        "Parent":"mixer1"
+                    }
+                    
                 }
             },{
                 "AddController":{

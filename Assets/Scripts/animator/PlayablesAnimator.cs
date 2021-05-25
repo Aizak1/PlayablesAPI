@@ -67,16 +67,17 @@ namespace animator {
                 if (commands[i].AddInput.HasValue) {
                     AddInputCommand inputCommand = commands[i].AddInput.Value;
 
-                    Playable parent = parents[inputCommand.Parent];
+                    var animationInput = inputCommand.AnimationInput;
+                    Playable parent = parents[animationInput.Parent];
 
-                    if (inputCommand.AnimationClip.HasValue) {
+                    if (animationInput.AnimationClip.HasValue) {
                         if (!rootNode.PlayableClip.IsNull()) {
                             currentNode.Next = new PlayableNode();
                             currentNode = currentNode.Next;
                         }
 
-                        string name = inputCommand.AnimationClip.Value.Name;
-                        float duration = inputCommand.AnimationClip.Value.TransitionDuration;
+                        string name = animationInput.AnimationClip.Value.Name;
+                        float duration = animationInput.AnimationClip.Value.TransitionDuration;
                         AnimationClip clip = resource.animations[name];
                         AnimationClipPlayable animation =
                             AnimationClipPlayable.Create(graph, clip);
@@ -88,20 +89,20 @@ namespace animator {
                         currentNode.TransitionDuration = duration;
                         currentNode.PlayableClip.SetTime(length);
 
-                    } else if (inputCommand.AnimationMixer.HasValue) {
-                        string name = inputCommand.AnimationMixer.Value.Name;
+                    } else if (animationInput.AnimationMixer.HasValue) {
+                        string name = animationInput.AnimationMixer.Value.Name;
                         Playable playable = AnimationMixerPlayable.Create(graph);
                         parents.Add(name, playable);
                         parent.AddInput(playable, source);
 
-                    } else if (inputCommand.AnimationLayerMixer.HasValue) {
-                        string name = inputCommand.AnimationLayerMixer.Value.Name;
+                    } else if (animationInput.AnimationLayerMixer.HasValue) {
+                        string name = animationInput.AnimationLayerMixer.Value.Name;
                         Playable playable = AnimationLayerMixerPlayable.Create(graph);
                         parents.Add(name, playable);
                         parent.AddInput(playable, source);
-                    } else if (inputCommand.AnimationJob.HasValue) {
+                    } else if (animationInput.AnimationJob.HasValue) {
 
-                        var job = inputCommand.AnimationJob.Value;
+                        var job = animationInput.AnimationJob.Value;
                         string jobName = job.Name;
 
                         if (job.LookAtJob.HasValue) {
