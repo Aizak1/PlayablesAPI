@@ -163,12 +163,15 @@ namespace animator {
             }
 
             currentNode = rootNode;
-            if (currentNode.Parent.inputParent.IsNull()) {
+            if (!currentNode.Parent.outputParent.IsOutputNull()) {
                 currentNode.Parent.outputParent.SetWeight(1);
-            } else {
+            } else if (!currentNode.Parent.inputParent.IsNull()) {
                 currentNode.Parent.inputParent.SetInputWeight(currentNode.PlayableClip, 1);
+
             }
-            currentNode.PlayableClip.SetTime(0);
+            if (!currentNode.PlayableClip.IsNull()) {
+                currentNode.PlayableClip.SetTime(0);
+            }
             graph.Play();
         }
 
