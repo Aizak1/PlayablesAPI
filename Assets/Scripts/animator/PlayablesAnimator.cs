@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 using animationJobs;
-
+using System;
 
 namespace animator {
 
@@ -16,31 +16,18 @@ namespace animator {
         [SerializeField]
         private AnimatorJobsSettings jobsSettings;
         private PlayableGraph graph;
-        private AnimationController controller;
-
-        private PlayableNode rootNode;
-        private PlayableNode currentNode;
-        private PlayableNode nextNode;
+        private Brain brain;
+        private List<string> animationConrollersNames;
 
         Dictionary<string, PlayableParent> parents;
 
         private void Update() {
-            if (currentNode == null) {
+            if (brain.AnimControllers == null) {
                 return;
             }
 
-            if (controller.OpenCircle.HasValue) {
-                currentNode = controller.OpenCircle.Value.UpdateNodeState(currentNode);
-
-            } else if (controller.CloseCircle.HasValue) {
-                currentNode = controller.CloseCircle.Value.UpdateNodeState(currentNode, rootNode);
-
-            } else if (controller.Random.HasValue) {
-                if (nextNode == null || nextNode == currentNode) {
-                    nextNode = new PlayableNode();
-                    nextNode = controller.Random.Value.GetRandomNode(currentNode, rootNode);
-                }
-                currentNode = controller.Random.Value.UpdateNodeState(currentNode, nextNode);
+            foreach (var item in animationConrollersNames) {
+                brain.ProcessController(item);
             }
         }
 
@@ -48,14 +35,12 @@ namespace animator {
             if (graph.IsValid()) {
                 graph.Destroy();
             }
+            animationConrollersNames = new List<string>();
             Animator animator = GetComponent<Animator>();
             graph = PlayableGraph.Create();
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
 
-            nextNode = null;
             parents = new Dictionary<string, PlayableParent>();
-            currentNode = new PlayableNode();
-            rootNode = currentNode;
 
             for (int i = 0; i < commands.Count; i++) {
                 if (commands[i].AddInput.HasValue) {
@@ -65,10 +50,7 @@ namespace animator {
                     string name = animationInput.Name;
 
                     if (animationInput.AnimationClip.HasValue) {
-                        if (!rootNode.PlayableClip.IsNull()) {
-                            currentNode.Next = new PlayableNode();
-                            currentNode = currentNode.Next;
-                        }
+
                         float duration = animationInput.AnimationClip.Value.TransitionDuration;
                         AnimationClip clip = resource.animations[name];
                         AnimationClipPlayable animation =
@@ -76,10 +58,24 @@ namespace animator {
                         ConnectNodeToParent(parent, animation);
                         float length = animation.GetAnimationClip().length;
 
-                        currentNode.Parent = parent;
-                        currentNode.PlayableClip = animation;
-                        currentNode.TransitionDuration = duration;
-                        currentNode.PlayableClip.SetTime(length);
+                        var newAnimation = new PlayableAnimation {
+                            Parent = parent,
+                            PlayableClip = animation,
+                            TransitionDuration = duration,
+                            AnimationLength = length
+                        };
+
+                        if (brain.AnimControllers == null || brain.AnimControllers.Count == 0) {
+                            continue;
+                        }
+                        var controllerName = animationInput.AnimationClip.Value.ControllerName;
+                        if (!brain.AnimControllers.ContainsKey(controllerName)) {
+                            Debug.LogError("Invalid controller name");
+                            return;
+                        }
+                        newAnimation.PlayableClip.SetTime(length);
+
+                        brain.AnimControllers[controllerName].PlayableAnimations.Add(newAnimation);
 
                     } else if (animationInput.AnimationMixer.HasValue) {
 
@@ -146,10 +142,44 @@ namespace animator {
 
                             ConnectNodeToParent(parent, twoBone);
                         }
+                    }else if (animationInput.AnimationBrain.HasValue) {
+                        brain = new Brain();
+                        brain.AnimControllers = new Dictionary<string, AnimationController>();
+
+                        AnimationScriptPlayable brainNode =
+                            AnimationScriptPlayable.Create(graph,brain);
+
+                        var playableParent = new PlayableParent();
+                        playableParent.inputParent = brainNode;
+                        parents.Add(name, playableParent);
+
+                        ConnectNodeToParent(parent, brainNode);
                     }
 
                 } else if (commands[i].AddContoller.HasValue) {
-                    controller = commands[i].AddContoller.Value.Controller;
+                    var input = commands[i].AddContoller.Value.ControllerInput;
+                    var controller = new AnimationController();
+
+                    if(!Enum.TryParse(input.ControllerType, out ControllerType type)) {
+                        Debug.LogError("Invalid controller type");
+                        return;
+                    }
+                    controller.ControllerType = type;
+
+                    controller.PlayableAnimations = new List<PlayableAnimation>();
+
+                    controller.CurrentAnimationIndex = 0;
+                    controller.NextAnimationIndex = 0;
+
+                    controller.RandomWeights = input.RandomWeights;
+
+                    if (brain.AnimControllers == null) {
+                        Debug.LogError("No Animation Brain");
+                        return;
+                    }
+                    animationConrollersNames.Add(input.Name);
+                    brain.AnimControllers.Add(input.Name, controller);
+
                 } else if (commands[i].AddOutput.HasValue) {
 
                     var animOutput = commands[i].AddOutput.Value.AnimationOutput;
@@ -162,16 +192,13 @@ namespace animator {
                 }
             }
 
-            currentNode = rootNode;
-            if (!currentNode.Parent.outputParent.IsOutputNull()) {
-                currentNode.Parent.outputParent.SetWeight(1);
-            } else if (!currentNode.Parent.inputParent.IsNull()) {
-                currentNode.Parent.inputParent.SetInputWeight(currentNode.PlayableClip, 1);
+            if (brain.AnimControllers != null && brain.AnimControllers.Count != 0) {
+                foreach (var item in brain.AnimControllers) {
+                    item.Value.PlayableAnimations[0].PlayableClip.SetTime(0);
+                    item.Value.PlayableAnimations[0].Parent.inputParent.SetInputWeight(0, 1);
+                }
+            }
 
-            }
-            if (!currentNode.PlayableClip.IsNull()) {
-                currentNode.PlayableClip.SetTime(0);
-            }
             graph.Play();
         }
 
@@ -180,6 +207,7 @@ namespace animator {
                 parent.outputParent.SetSourcePlayable(playable);
             } else {
                 parent.inputParent.AddInput(playable, 0);
+
             }
         }
 

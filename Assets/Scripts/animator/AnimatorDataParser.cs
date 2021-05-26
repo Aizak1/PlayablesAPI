@@ -23,11 +23,11 @@ namespace animator {
         private const string ADD_INPUT = "AddInput";
         private const string ADD_CONTROLLER = "AddController";
         private const string ADD_OUTPUT = "AddOutput";
-        private const string CONTROLLER = "Controller";
+        private const string CONTROLLER = "ControllerInput";
         private const string OPEN_CIRCLE = "OpenCircle";
         private const string CLOSE_CIRCLE = "CloseCircle";
         private const string RANDOM = "Random";
-        private const string WEIGHTS = "Weights";
+        private const string RANDOM_WEIGHTS = "RandomWeights";
         private const string PARENT = "Parent";
         private const string ANIMATION_CLIP = "AnimationClip";
         private const string NAME = "Name";
@@ -36,9 +36,12 @@ namespace animator {
         private const string ANIMATION_OUTPUT = "AnimationOutput";
         private const string ANIMATION_MIXER = "AnimationMixer";
         private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
+        private const string ANIMATION_BRAIN = "AnimationBrain";
         private const string ANIMATION_JOB = "AnimationJob";
         private const string LOOK_AT_JOB = "LookAtJob";
         private const string TWOBONE_IK_JOB = "TwoBoneIKJob";
+        private const string CONTROLLER_TYPE = "ControllerType";
+        private const string CONTROLLER_NAME = "ControllerName";
 
         private void Update() {
             if (Input.GetKeyDown(KeyCode.Space)) {
@@ -202,64 +205,61 @@ namespace animator {
             }
 
             var controllerDict = addController[CONTROLLER].Obj.Peel();
-            var animationController = new AnimationController();
+            var animationController = new AnimationControllerInput();
 
-            if (controllerDict.ContainsKey(OPEN_CIRCLE)) {
-                animationController.OpenCircle = new OpenCircleController();
-
-            } else if (controllerDict.ContainsKey(CLOSE_CIRCLE)) {
-                animationController.CloseCircle = new CloseCircleController();
-
-            } else if (controllerDict.ContainsKey(RANDOM)) {
-
-                if (controllerDict[RANDOM].Obj.IsNone()) {
-                    Debug.LogError("Random Controller field is empty");
-                    return null;
-                }
-
-                var randomDict = controllerDict[RANDOM].Obj.Peel();
-                var randomController = new RandomController();
-
-                if (!randomDict.ContainsKey(WEIGHTS)) {
-                    Debug.LogError("No Weights field in Random Controller");
-                    return null;
-                }
-
-                if (randomDict[WEIGHTS].Arr.IsNone()) {
-                    Debug.LogError("Weights field in Random Controller is empty");
-                    return null;
-                }
-
-                List<JSONType> weightList = randomDict[WEIGHTS].Arr.Peel();
-                List<int> weights = new List<int>();
-
-                foreach (var weight in weightList) {
-
-                    if (weight.Num.IsNone()) {
-                        Debug.LogError("Weight is not a number");
-                        weights.Add(0);
-                        continue;
-                    }
-
-                    if (!int.TryParse(weight.Num.Peel(), out int num)) {
-                        Debug.LogError("Weight is not a number");
-                        weights.Add(0);
-                        continue;
-                    }
-
-                    weights.Add(num);
-                }
-
-                randomController.Weights = weights;
-
-                animationController.Random = randomController;
-
-            } else {
-                Debug.LogError("Unknown AnimationController");
+            if (!controllerDict.ContainsKey(CONTROLLER_TYPE)) {
+                Debug.LogError("No ControllerType field");
                 return null;
             }
 
-            addControllerCommand.Controller = animationController;
+            if (controllerDict[CONTROLLER_TYPE].Str.IsNone()) {
+                Debug.LogError("ControllerType field is empty");
+                return null;
+            }
+            animationController.ControllerType = controllerDict[CONTROLLER_TYPE].Str.Peel();
+
+            if (!controllerDict.ContainsKey(NAME)) {
+                Debug.LogError("No ControllerType field");
+                return null;
+            }
+
+            if (controllerDict[NAME].Str.IsNone()) {
+                Debug.LogError("ControllerType field is empty");
+                return null;
+            }
+            animationController.Name = controllerDict[NAME].Str.Peel();
+
+
+
+            List<int> weights = new List<int>();
+
+            if (controllerDict.ContainsKey(RANDOM_WEIGHTS)) {
+                if (controllerDict[RANDOM_WEIGHTS].Arr.IsSome()) {
+
+                    List<JSONType> weightList = controllerDict[RANDOM_WEIGHTS].Arr.Peel();
+
+                    foreach (var weight in weightList) {
+
+                        if (weight.Num.IsNone()) {
+                            Debug.LogError("Weight is not a number");
+                            weights.Add(0);
+                            continue;
+                        }
+
+                        if (!int.TryParse(weight.Num.Peel(), out int num)) {
+                            Debug.LogError("Weight is not a number");
+                            weights.Add(0);
+                            continue;
+                        }
+
+                        weights.Add(num);
+                    }
+                }
+            }
+
+            animationController.RandomWeights = weights;
+
+            addControllerCommand.ControllerInput = animationController;
 
             return addControllerCommand;
         }
@@ -332,6 +332,12 @@ namespace animator {
                     return null;
                 }
 
+                if (animClip.ContainsKey(CONTROLLER_NAME)) {
+                    if (animClip[CONTROLLER_NAME].Str.IsSome()) {
+                        animationClipInput.ControllerName = animClip[CONTROLLER_NAME].Str.Peel();
+                    }
+                }
+
                 animationClipInput.TransitionDuration = duration;
                 animationInput.AnimationClip = animationClipInput;
                 animInput.AnimationInput = animationInput;
@@ -367,10 +373,16 @@ namespace animator {
                 animationInput.AnimationJob = animationJobInput;
                 animInput.AnimationInput = animationInput;
 
+            } else if (animInputDict.ContainsKey(ANIMATION_BRAIN)) {
+                var animationBrainInput = new AnimationBrainInput();
+                animationInput.AnimationBrain = animationBrainInput;
+                animInput.AnimationInput = animationInput;
+
             } else {
                 Debug.LogError("Unknown AnimationInput");
                 return null;
             }
+
 
             return animInput;
         }

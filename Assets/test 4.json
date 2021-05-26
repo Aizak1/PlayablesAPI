@@ -11,13 +11,30 @@
             },{
                 "AddInput":{
                     "AnimationInput":{
+                        "AnimationBrain":{
+                        },
+                        "Name":"brain",
+                        "Parent":"main"
+                    }
+                   
+                }
+            },{
+                "AddController":{
+                    "ControllerInput":{
+                        "ControllerType": "CloseCircle",
+                        "Name": "close"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
                         "AnimationJob":{
                          "LookAtJob":{
 
                          }
                         },
                         "Name":"job",
-                        "Parent":"main"
+                        "Parent":"brain"
                     }
                    
                 }
@@ -25,7 +42,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationMixer":{
-
                         },
                         "Name":"mixer1",
                         "Parent":"job"
@@ -36,9 +52,11 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "TransitionDuration":0.5
+
+                            "TransitionDuration":0.5,
+                            "ControllerName": "close"
                         },
-                        "Name":"Flair",
+                        "Name":"Clapping",
                         "Parent":"mixer1"
                     }
                    
@@ -47,19 +65,13 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "TransitionDuration":0.5
+                            "TransitionDuration":0.5,
+                            "ControllerName": "close"
                         },
-                        "Name":"Clapping",
+                        "Name":"Flair",
                         "Parent":"mixer1"
                     }
                    
-                }
-            },{
-                "AddController":{
-                    "Controller":{
-                        "CloseCircle":{
-                        }
-                    }
                 }
             }
         ]

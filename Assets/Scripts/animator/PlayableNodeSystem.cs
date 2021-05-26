@@ -4,11 +4,10 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 namespace animator {
-    public class PlayableNode {
+    public struct PlayableAnimation {
         public AnimationClipPlayable PlayableClip;
         public float TransitionDuration;
         public PlayableParent Parent;
-        public PlayableNode Next;
-
+        public float AnimationLength;
     }
 }

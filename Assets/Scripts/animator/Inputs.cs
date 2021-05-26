@@ -7,6 +7,11 @@ namespace animator {
         public AnimationMixerInput? AnimationMixer;
         public AnimationLayerMixerInput? AnimationLayerMixer;
         public AnimationJobInput? AnimationJob;
+        public AnimationBrainInput? AnimationBrain;
+    }
+
+    public struct AnimationBrainInput {
+
     }
 
     public struct AnimationJobInput {
@@ -17,13 +22,14 @@ namespace animator {
     public struct LookAtJobInput {
 
     }
+
     public struct TwoBoneIKJobInput {
 
     }
 
-
     public struct AnimationClipInput {
         public float TransitionDuration;
+        public string ControllerName;
     }
 
     public struct AnimationMixerInput {
