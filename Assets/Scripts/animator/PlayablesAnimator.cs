@@ -41,8 +41,6 @@ namespace animator {
                 ProcessCommand(commands[i]);
             }
 
-            Brain.ActivateFirstController();
-
             graph.Play();
         }
 
@@ -74,9 +72,11 @@ namespace animator {
                     AnimationClip clip = resource.animations[name];
 
                     var controllerName = animationInput.AnimationClip.Value.ControllerName;
-                    if (!Brain.AnimControllers.ContainsKey(controllerName)) {
-                        Debug.LogError("Invalid controller name");
-                        return;
+                    if (Brain != null) {
+                        if (!Brain.AnimControllers.ContainsKey(controllerName)) {
+                            Debug.LogError("Invalid controller name");
+                            return;
+                        }
                     }
                     AnimationClipPlayable animation =
                         AnimationClipPlayable.Create(graph, clip);
@@ -103,7 +103,7 @@ namespace animator {
                         AnimationLength = length
                     };
 
-                    if (Brain.AnimControllers == null || Brain.AnimControllers.Count == 0) {
+                    if (Brain == null || Brain.AnimControllers.Count == 0) {
                         return;
                     }
                     newAnimation.PlayableClip.SetTime(length);

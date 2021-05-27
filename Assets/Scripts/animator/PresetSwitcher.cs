@@ -11,38 +11,38 @@ namespace animator {
         [SerializeField]
         private PlayablesAnimator animator;
         [SerializeField]
-        private ControllerGroupName[] controllerGroupNames;
+        private ControllerGroup[] controllerGroups;
 
-        private int groupIndex;
+        private int groupIndex = -1;
 
         private void Update() {
             if (animator.Brain == null) {
                 return;
             }
 
-            if (controllerGroupNames == null) {
+            if (controllerGroups == null) {
                 return;
             }
 
             if (Input.GetKeyDown(nextPresetCode)) {
                 groupIndex += 1;
-                if (groupIndex >= controllerGroupNames.Length) {
+                if (groupIndex >= controllerGroups.Length) {
                     groupIndex = 0;
                 }
-                animator.Brain.ActivateArrayOfControllers(controllerGroupNames[groupIndex].names);
+                animator.Brain.ActivateControllers(controllerGroups[groupIndex].ControllerNames);
             }
             if (Input.GetKeyDown(previousPresetCode)) {
                 groupIndex -= 1;
                 if (groupIndex < 0) {
-                    groupIndex = controllerGroupNames.Length - 1;
+                    groupIndex = controllerGroups.Length - 1;
                 }
-                animator.Brain.ActivateArrayOfControllers(controllerGroupNames[groupIndex].names);
+                animator.Brain.ActivateControllers(controllerGroups[groupIndex].ControllerNames);
             }
         }
     }
 
     [System.Serializable]
-    public struct ControllerGroupName {
-        public string[] names;
+    public struct ControllerGroup {
+        public string[] ControllerNames;
     }
 }

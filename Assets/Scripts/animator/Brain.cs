@@ -26,7 +26,7 @@ namespace animator {
 
         }
 
-        public void ActivateArrayOfControllers(string[] names) {
+        public void ActivateControllers(string[] names) {
             foreach (var name in ControllerNames) {
                 DeactivateController(name);
             }
@@ -36,10 +36,6 @@ namespace animator {
                     ActivateController(name);
                 }
             }
-        }
-
-        public void ActivateFirstController() {
-            SwitchController(0);
         }
 
         public void SwitchController(int newIndex) {

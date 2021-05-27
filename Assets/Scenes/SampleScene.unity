@@ -447,8 +447,12 @@ MonoBehaviour:
   nextPresetCode: 273
   previousPresetCode: 274
   animator: {fileID: 838713090}
-  controllerGroupNames:
-  - names:
+  controllerGroups:
+  - ControllerNames:
+    - close1
+  - ControllerNames:
+    - close2
+  - ControllerNames:
     - close1
     - close2
 --- !u!114 &838713092
