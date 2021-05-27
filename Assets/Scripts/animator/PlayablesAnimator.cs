@@ -16,7 +16,8 @@ namespace animator {
         [SerializeField]
         private AnimatorJobsSettings jobsSettings;
         private PlayableGraph graph;
-        private Brain brain;
+        private Animator animator;
+        public Brain Brain;
 
         Dictionary<string, PlayableParent> parents;
 
@@ -25,12 +26,29 @@ namespace animator {
                 graph.Destroy();
             }
 
-            Animator animator = GetComponent<Animator>();
+            animator = GetComponent<Animator>();
+
             graph = PlayableGraph.Create();
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
 
             parents = new Dictionary<string, PlayableParent>();
 
+            ProcessCommands(commands);
+
+            Brain.ActivateFirstController();
+
+            graph.Play();
+        }
+
+        public void AddNewCommands(List<Command> commands) {
+            if (!graph.IsValid()) {
+                return;
+            }
+
+            ProcessCommands(commands);
+        }
+
+        private void ProcessCommands(List<Command> commands) {
             for (int i = 0; i < commands.Count; i++) {
                 if (commands[i].AddInput.HasValue) {
                     AddInputCommand inputCommand = commands[i].AddInput.Value;
@@ -54,17 +72,17 @@ namespace animator {
                             AnimationLength = length
                         };
 
-                        if (brain.AnimControllers == null || brain.AnimControllers.Count == 0) {
+                        if (Brain.AnimControllers == null || Brain.AnimControllers.Count == 0) {
                             continue;
                         }
                         var controllerName = animationInput.AnimationClip.Value.ControllerName;
-                        if (!brain.AnimControllers.ContainsKey(controllerName)) {
+                        if (!Brain.AnimControllers.ContainsKey(controllerName)) {
                             Debug.LogError("Invalid controller name");
                             return;
                         }
                         newAnimation.PlayableClip.SetTime(length);
 
-                        brain.AnimControllers[controllerName].PlayableAnimations.Add(newAnimation);
+                        Brain.AnimControllers[controllerName].PlayableAnimations.Add(newAnimation);
 
                     } else if (animationInput.AnimationMixer.HasValue) {
 
@@ -87,7 +105,6 @@ namespace animator {
                     } else if (animationInput.AnimationJob.HasValue) {
 
                         var job = animationInput.AnimationJob.Value;
-                        string jobName = name;
 
                         if (job.LookAtJob.HasValue) {
                             animator.fireEvents = false;
@@ -132,12 +149,12 @@ namespace animator {
 
                             ConnectNodeToParent(parent, twoBone);
                         }
-                    }else if (animationInput.AnimationBrain.HasValue) {
+                    } else if (animationInput.AnimationBrain.HasValue) {
                         var brainNode =
                             ScriptPlayable<Brain>.Create(graph);
 
-                        brain = brainNode.GetBehaviour();
-                        brain.Initialize();
+                        Brain = brainNode.GetBehaviour();
+                        Brain.Initialize();
 
                         var playableParent = new PlayableParent {
                             inputParent = brainNode
@@ -151,32 +168,33 @@ namespace animator {
                     var input = commands[i].AddContoller.Value.ControllerInput;
                     var controller = new AnimationController();
 
-                    if(!Enum.TryParse(input.ControllerType, out ControllerType type)) {
+                    if (!Enum.TryParse(input.ControllerType, out ControllerType type)) {
                         Debug.LogError("Invalid controller type");
                         return;
                     }
                     controller.ControllerType = type;
 
                     controller.PlayableAnimations = new List<PlayableAnimation>();
+                    controller.RandomWeights = input.RandomWeights;
 
                     controller.CurrentAnimationIndex = 0;
                     controller.NextAnimationIndex = 0;
 
-                    controller.RandomWeights = input.RandomWeights;
+                    controller.isEnable = false;
 
-                    if (brain.AnimControllers == null) {
+                    if (Brain.AnimControllers == null) {
                         Debug.LogError("No Animation Brain");
                         return;
                     }
 
-                    brain.AnimControllers.Add(input.Name, controller);
-                    brain.ControllerNames.Add(input.Name);
+                    Brain.AnimControllers.Add(input.Name, controller);
+                    Brain.ControllerNames.Add(input.Name);
 
                 } else if (commands[i].AddOutput.HasValue) {
 
                     var animOutput = commands[i].AddOutput.Value.AnimationOutput;
                     string outputName = animOutput.Name;
-                    var playableOut= AnimationPlayableOutput.Create(graph, outputName, animator);
+                    var playableOut = AnimationPlayableOutput.Create(graph, outputName, animator);
                     var parentPlayable = new PlayableParent {
                         outputParent = playableOut
                     };
@@ -185,21 +203,18 @@ namespace animator {
                 }
             }
 
-            if (brain.AnimControllers != null && brain.AnimControllers.Count != 0) {
-                foreach (var item in brain.AnimControllers) {
-                    item.Value.PlayableAnimations[0].PlayableClip.SetTime(0);
-                    item.Value.PlayableAnimations[0].Parent.inputParent.SetInputWeight(0, 1);
-                }
-            }
-
-            graph.Play();
         }
 
         private void ConnectNodeToParent(PlayableParent parent, Playable playable) {
             if (parent.inputParent.IsNull()) {
                 parent.outputParent.SetSourcePlayable(playable);
             } else {
+                bool isAnimation = playable.IsPlayableOfType<AnimationClipPlayable>();
                 parent.inputParent.AddInput(playable, 0);
+                if (!isAnimation) {
+                    parent.inputParent.SetInputWeight(playable, 1);
+                }
+
 
             }
         }

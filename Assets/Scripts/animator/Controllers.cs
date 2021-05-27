@@ -20,9 +20,9 @@ namespace animator {
     public struct AnimationController {
         public ControllerType ControllerType;
         public List<PlayableAnimation> PlayableAnimations;
+        public List<int> RandomWeights;
         public int CurrentAnimationIndex;
         public int NextAnimationIndex;
-        public List<int> RandomWeights;
-
+        public bool isEnable;
     }
 }

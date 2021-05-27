@@ -9,12 +9,13 @@ namespace animator {
 
         public Dictionary<string, AnimationController> AnimControllers;
         public List<string> ControllerNames;
+        private int currentControllerIndex;
 
         public void Initialize() {
 
             AnimControllers = new Dictionary<string, AnimationController>();
             ControllerNames = new List<string>();
-
+            currentControllerIndex = 0;
         }
 
         override public void PrepareFrame(Playable owner, FrameData info) {
@@ -25,8 +26,64 @@ namespace animator {
 
         }
 
-        public void ProcessController(string name) {
+        public void ActivateNextController() {
+            SwitchController(currentControllerIndex + 1);
+        }
+
+        public void ActivatePreviousController() {
+            SwitchController(currentControllerIndex - 1);
+        }
+
+        public void ActivateFirstController() {
+            SwitchController(0);
+        }
+
+        private void SwitchController(int newIndex) {
+            if (ControllerNames.Count == 0) {
+                return;
+            }
+
+            if (newIndex >= ControllerNames.Count) {
+                newIndex = 0;
+            } else if (newIndex < 0) {
+                newIndex = ControllerNames.Count - 1;
+            }
+
+            DeactivateController(currentControllerIndex);
+            ActivateController(newIndex);
+
+            currentControllerIndex = newIndex;
+        }
+
+        private void DeactivateController(int index) {
+            var controller = AnimControllers[ControllerNames[index]];
+            controller.isEnable = false;
+            controller.CurrentAnimationIndex = 0;
+            controller.NextAnimationIndex = 0;
+            foreach (var item in controller.PlayableAnimations) {
+                item.PlayableClip.SetTime(item.PlayableClip.GetAnimationClip().length);
+                item.Parent.inputParent.SetInputWeight(item.PlayableClip, 0);
+            }
+            AnimControllers[ControllerNames[index]] = controller;
+        }
+
+        private void ActivateController(int index) {
+            var controller = AnimControllers[ControllerNames[index]];
+            controller.isEnable = true;
+
+            var firstAnim = controller.PlayableAnimations[0];
+            firstAnim.PlayableClip.SetTime(0);
+            firstAnim.Parent.inputParent.SetInputWeight(firstAnim.PlayableClip, 1);
+            AnimControllers[ControllerNames[index]] = controller;
+        }
+
+        private void ProcessController(string name) {
             var controller = AnimControllers[name];
+
+            if (!controller.isEnable) {
+                return;
+            }
+
             if (controller.NextAnimationIndex >= controller.PlayableAnimations.Count
                 || (controller.NextAnimationIndex == controller.CurrentAnimationIndex
                 && controller.PlayableAnimations.Count != 1)){
@@ -54,7 +111,7 @@ namespace animator {
             AnimControllers[name] = controller;
         }
 
-        public bool IsEndOfTransition(PlayableAnimation current) {
+        private bool IsEndOfTransition(PlayableAnimation current) {
             float length = current.AnimationLength;
             float currentClipTime = (float)current.PlayableClip.GetTime();
 
@@ -65,7 +122,7 @@ namespace animator {
             return false;
         }
 
-        public void MakeTransition(PlayableAnimation current, PlayableAnimation next) {
+        private void MakeTransition(PlayableAnimation current, PlayableAnimation next) {
             float length = current.AnimationLength;
             float duration = current.TransitionDuration;
             float startTransitionTime = length - duration;
@@ -77,7 +134,11 @@ namespace animator {
             SpreadWeight(weight, current, next);
         }
 
-        private void SpreadWeight(float weight, PlayableAnimation current, PlayableAnimation next) {
+        private void SpreadWeight(
+            float weight,
+            PlayableAnimation current,
+            PlayableAnimation next
+            ) {
             if (current.Parent.inputParent.IsNull()) {
                 return;
             }

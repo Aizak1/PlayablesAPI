@@ -84,6 +84,47 @@ namespace animator {
                 var commands = inputData.commands;
                 playablesAnimator.Setup(commands);
             }
+
+            if (Input.GetKeyDown(KeyCode.KeypadEnter)) {
+                if (jsonFile == null) {
+                    Debug.LogError("There is no jsonFile");
+                    return;
+                }
+
+                Result<JSONType, JSONError> typeRes = VJP.Parse(jsonFile.text, 1024);
+
+                if (typeRes.IsErr()) {
+                    JSONError error = typeRes.AsErr();
+                    Debug.LogError(error.type);
+                    return;
+                }
+
+                JSONType type = typeRes.AsOk();
+
+                if (type.Obj.IsNone()) {
+                    Debug.LogError("JSON file is Empty");
+                    return;
+                }
+
+                var obj = type.Obj.Peel();
+
+                if (!obj.ContainsKey(INPUT_DATA)) {
+                    Debug.LogError("No Input Data field");
+                    return;
+                }
+
+                JSONType json = obj[INPUT_DATA];
+                Option<InputData> optionInputData = LoadInputDataFromJSON(json);
+
+                if (optionInputData.IsNone()) {
+                    Debug.LogError("Incorrect input data");
+                    return;
+                }
+
+                var inputData = optionInputData.Peel();
+                var commands = inputData.commands;
+                playablesAnimator.AddNewCommands(commands);
+            }
         }
 
         private Option<InputData> LoadInputDataFromJSON(JSONType json) {

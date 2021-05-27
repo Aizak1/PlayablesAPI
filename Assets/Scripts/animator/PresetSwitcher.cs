@@ -10,10 +10,14 @@ namespace animator {
         [SerializeField]
         private PlayablesAnimator animator;
         private void Update() {
-            if (Input.GetKeyDown(nextPresetCode)) {
+            if (animator.Brain == null) {
+                return;
             }
-
+            if (Input.GetKeyDown(nextPresetCode)) {
+                animator.Brain.ActivateNextController();
+            }
             if (Input.GetKeyDown(previousPresetCode)) {
+                animator.Brain.ActivatePreviousController();
             }
         }
     }
