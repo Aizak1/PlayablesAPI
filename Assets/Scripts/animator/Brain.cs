@@ -5,15 +5,24 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 namespace animator {
-    public struct Brain : IAnimationJob {
+    public class Brain : PlayableBehaviour {
 
         public Dictionary<string, AnimationController> AnimControllers;
+        public List<string> ControllerNames;
 
-        public void ProcessAnimation(AnimationStream stream) {
+        public void Initialize() {
+
+            AnimControllers = new Dictionary<string, AnimationController>();
+            ControllerNames = new List<string>();
 
         }
 
-        public void ProcessRootMotion(AnimationStream stream) {
+        override public void PrepareFrame(Playable owner, FrameData info) {
+
+            foreach (var item in ControllerNames) {
+                ProcessController(item);
+            }
+
         }
 
         public void ProcessController(string name) {

@@ -17,25 +17,14 @@ namespace animator {
         private AnimatorJobsSettings jobsSettings;
         private PlayableGraph graph;
         private Brain brain;
-        private List<string> animationConrollersNames;
 
         Dictionary<string, PlayableParent> parents;
-
-        private void Update() {
-            if (brain.AnimControllers == null) {
-                return;
-            }
-
-            foreach (var item in animationConrollersNames) {
-                brain.ProcessController(item);
-            }
-        }
 
         public void Setup(List<Command> commands) {
             if (graph.IsValid()) {
                 graph.Destroy();
             }
-            animationConrollersNames = new List<string>();
+
             Animator animator = GetComponent<Animator>();
             graph = PlayableGraph.Create();
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
@@ -136,21 +125,23 @@ namespace animator {
 
                             Playable twoBone = AnimationScriptPlayable.Create(graph, twoBoneIKJob);
 
-                            var playableParent = new PlayableParent();
-                            playableParent.inputParent = twoBone;
+                            var playableParent = new PlayableParent {
+                                inputParent = twoBone
+                            };
                             parents.Add(name, playableParent);
 
                             ConnectNodeToParent(parent, twoBone);
                         }
                     }else if (animationInput.AnimationBrain.HasValue) {
-                        brain = new Brain();
-                        brain.AnimControllers = new Dictionary<string, AnimationController>();
+                        var brainNode =
+                            ScriptPlayable<Brain>.Create(graph);
 
-                        AnimationScriptPlayable brainNode =
-                            AnimationScriptPlayable.Create(graph,brain);
+                        brain = brainNode.GetBehaviour();
+                        brain.Initialize();
 
-                        var playableParent = new PlayableParent();
-                        playableParent.inputParent = brainNode;
+                        var playableParent = new PlayableParent {
+                            inputParent = brainNode
+                        };
                         parents.Add(name, playableParent);
 
                         ConnectNodeToParent(parent, brainNode);
@@ -177,16 +168,18 @@ namespace animator {
                         Debug.LogError("No Animation Brain");
                         return;
                     }
-                    animationConrollersNames.Add(input.Name);
+
                     brain.AnimControllers.Add(input.Name, controller);
+                    brain.ControllerNames.Add(input.Name);
 
                 } else if (commands[i].AddOutput.HasValue) {
 
                     var animOutput = commands[i].AddOutput.Value.AnimationOutput;
                     string outputName = animOutput.Name;
                     var playableOut= AnimationPlayableOutput.Create(graph, outputName, animator);
-                    var parentPlayable = new PlayableParent();
-                    parentPlayable.outputParent = playableOut;
+                    var parentPlayable = new PlayableParent {
+                        outputParent = playableOut
+                    };
                     parents.Add(outputName, parentPlayable);
 
                 }
