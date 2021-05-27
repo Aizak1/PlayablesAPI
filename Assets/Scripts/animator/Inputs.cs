@@ -35,6 +35,7 @@ namespace animator {
     public struct AnimationClipInput {
         public float TransitionDuration;
         public string ControllerName;
+        public string MaskName;
     }
 
     public struct AnimationMixerInput {

@@ -81,6 +81,19 @@ namespace animator {
                     AnimationClipPlayable animation =
                         AnimationClipPlayable.Create(graph, clip);
                     ConnectNodeToParent(parent, animation);
+
+                    if (!parent.inputParent.IsNull()) {
+                        if (parent.inputParent.IsPlayableOfType<AnimationLayerMixerPlayable>()) {
+                            var maskName = animationInput.AnimationClip.Value.MaskName;
+                            if (resource.masks.ContainsKey(maskName)) {
+                                var layerMixer = (AnimationLayerMixerPlayable)parent.inputParent;
+                                var layerIndex = (uint)layerMixer.GetInputCount() - 1;
+                                var mask = resource.masks[maskName];
+                                layerMixer.SetLayerMaskFromAvatarMask(layerIndex, mask);
+                            }
+                        }
+                    }
+
                     float length = animation.GetAnimationClip().length;
 
                     var newAnimation = new PlayableAnimation {
@@ -117,7 +130,7 @@ namespace animator {
                         return;
                     }
 
-                    Playable playable = AnimationLayerMixerPlayable.Create(graph);
+                    var playable = AnimationLayerMixerPlayable.Create(graph);
 
                     var playableParent = new PlayableParent();
                     playableParent.inputParent = playable;

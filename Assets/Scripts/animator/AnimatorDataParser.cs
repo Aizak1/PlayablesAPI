@@ -24,13 +24,11 @@ namespace animator {
         private const string ADD_CONTROLLER = "AddController";
         private const string ADD_OUTPUT = "AddOutput";
         private const string CONTROLLER = "ControllerInput";
-        private const string OPEN_CIRCLE = "OpenCircle";
-        private const string CLOSE_CIRCLE = "CloseCircle";
-        private const string RANDOM = "Random";
         private const string RANDOM_WEIGHTS = "RandomWeights";
         private const string PARENT = "Parent";
         private const string ANIMATION_CLIP = "AnimationClip";
         private const string NAME = "Name";
+        private const string MASK_NAME = "MaskName";
         private const string TRANSITION_DURATION = "TransitionDuration";
         private const string ANIMATION_INPUT = "AnimationInput";
         private const string ANIMATION_OUTPUT = "AnimationOutput";
@@ -380,6 +378,13 @@ namespace animator {
                     }
                 }
 
+                if (animClip.ContainsKey(MASK_NAME)) {
+                    if (animClip[MASK_NAME].Str.IsSome()) {
+                        var maskName = animClip[MASK_NAME].Str.Peel();
+                        animationClipInput.MaskName = maskName;
+                    }
+                }
+
                 animationClipInput.TransitionDuration = duration;
                 animationInput.AnimationClip = animationClipInput;
                 animInput.AnimationInput = animationInput;
@@ -393,6 +398,7 @@ namespace animator {
             } else if (animInputDict.ContainsKey(ANIMATION_LAYER_MIXER)) {
 
                 var animationMixerLayerInput = new AnimationLayerMixerInput();
+
                 animationInput.AnimationLayerMixer = animationMixerLayerInput;
                 animInput.AnimationInput = animationInput;
 

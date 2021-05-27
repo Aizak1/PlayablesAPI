@@ -447,6 +447,10 @@ MonoBehaviour:
   nextPresetCode: 273
   previousPresetCode: 274
   animator: {fileID: 838713090}
+  controllerGroupNames:
+  - names:
+    - close1
+    - close2
 --- !u!114 &838713092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -460,7 +464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playablesAnimator: {fileID: 838713090}
-  jsonFile: {fileID: 4900000, guid: f5d11e863dfe1744e991d4f84689a3a2, type: 3}
+  jsonFile: {fileID: 4900000, guid: 03869909dca62914aa610223e38ff1d3, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -735,6 +739,9 @@ MonoBehaviour:
   - {fileID: 7400000, guid: c7348c31a8dabc14283c475d263c3324, type: 2}
   - {fileID: 7400000, guid: 48649a6a62b7cee408e332432682909b, type: 2}
   - {fileID: 7400000, guid: 66545a4734d66a64192e92231814a4e7, type: 2}
+  avatarMasks:
+  - {fileID: 31900000, guid: 4b017bd85808150499ca7a44d8a42924, type: 2}
+  - {fileID: 31900000, guid: 9e469674925c74542ad48662e8f911bf, type: 2}
   resourceToFill: {fileID: 1524342003}
 --- !u!4 &2038153997
 Transform:

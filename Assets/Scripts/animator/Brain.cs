@@ -26,19 +26,23 @@ namespace animator {
 
         }
 
-        public void ActivateNextController() {
-            SwitchController(currentControllerIndex + 1);
-        }
+        public void ActivateArrayOfControllers(string[] names) {
+            foreach (var name in ControllerNames) {
+                DeactivateController(name);
+            }
 
-        public void ActivatePreviousController() {
-            SwitchController(currentControllerIndex - 1);
+            foreach (var name in names) {
+                if (AnimControllers.ContainsKey(name)) {
+                    ActivateController(name);
+                }
+            }
         }
 
         public void ActivateFirstController() {
             SwitchController(0);
         }
 
-        private void SwitchController(int newIndex) {
+        public void SwitchController(int newIndex) {
             if (ControllerNames.Count == 0) {
                 return;
             }
@@ -49,14 +53,19 @@ namespace animator {
                 newIndex = ControllerNames.Count - 1;
             }
 
-            DeactivateController(currentControllerIndex);
-            ActivateController(newIndex);
+            DeactivateController(ControllerNames[currentControllerIndex]);
+            ActivateController(ControllerNames[newIndex]);
 
             currentControllerIndex = newIndex;
         }
 
-        private void DeactivateController(int index) {
-            var controller = AnimControllers[ControllerNames[index]];
+        private void DeactivateController(string name) {
+            var controller = AnimControllers[name];
+
+            if (!controller.isEnable) {
+                return;
+            }
+
             controller.isEnable = false;
             controller.CurrentAnimationIndex = 0;
             controller.NextAnimationIndex = 0;
@@ -64,17 +73,22 @@ namespace animator {
                 item.PlayableClip.SetTime(item.PlayableClip.GetAnimationClip().length);
                 item.Parent.inputParent.SetInputWeight(item.PlayableClip, 0);
             }
-            AnimControllers[ControllerNames[index]] = controller;
+            AnimControllers[name] = controller;
         }
 
-        private void ActivateController(int index) {
-            var controller = AnimControllers[ControllerNames[index]];
+        private void ActivateController(string name) {
+            var controller = AnimControllers[name];
+
+            if (controller.isEnable) {
+                return;
+            }
+
             controller.isEnable = true;
 
             var firstAnim = controller.PlayableAnimations[0];
             firstAnim.PlayableClip.SetTime(0);
             firstAnim.Parent.inputParent.SetInputWeight(firstAnim.PlayableClip, 1);
-            AnimControllers[ControllerNames[index]] = controller;
+            AnimControllers[name] = controller;
         }
 
         private void ProcessController(string name) {

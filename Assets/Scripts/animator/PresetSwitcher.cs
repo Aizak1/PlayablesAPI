@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -9,16 +10,39 @@ namespace animator {
         private KeyCode previousPresetCode;
         [SerializeField]
         private PlayablesAnimator animator;
+        [SerializeField]
+        private ControllerGroupName[] controllerGroupNames;
+
+        private int groupIndex;
+
         private void Update() {
             if (animator.Brain == null) {
                 return;
             }
+
+            if (controllerGroupNames == null) {
+                return;
+            }
+
             if (Input.GetKeyDown(nextPresetCode)) {
-                animator.Brain.ActivateNextController();
+                groupIndex += 1;
+                if (groupIndex >= controllerGroupNames.Length) {
+                    groupIndex = 0;
+                }
+                animator.Brain.ActivateArrayOfControllers(controllerGroupNames[groupIndex].names);
             }
             if (Input.GetKeyDown(previousPresetCode)) {
-                animator.Brain.ActivatePreviousController();
+                groupIndex -= 1;
+                if (groupIndex < 0) {
+                    groupIndex = controllerGroupNames.Length - 1;
+                }
+                animator.Brain.ActivateArrayOfControllers(controllerGroupNames[groupIndex].names);
             }
         }
+    }
+
+    [System.Serializable]
+    public struct ControllerGroupName {
+        public string[] names;
     }
 }
