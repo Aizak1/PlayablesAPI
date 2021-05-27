@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
 #if UNITY_2019_3_OR_NEWER
 using UnityEngine.Animations;
@@ -14,6 +15,7 @@ public struct DampingJob : IAnimationJob
     public NativeArray<Quaternion> localRotations;
     public NativeArray<Vector3> positions;
     public NativeArray<Vector3> velocities;
+
 
     /// <summary>
     /// Transfer the root position and rotation through the graph.

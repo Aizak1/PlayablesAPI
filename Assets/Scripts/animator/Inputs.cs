@@ -17,6 +17,11 @@ namespace animator {
     public struct AnimationJobInput {
         public LookAtJobInput? LookAtJob;
         public TwoBoneIKJobInput? TwoBoneIKJob;
+        public DampingJobInput? DampingJob;
+    }
+
+    public struct DampingJobInput {
+
     }
 
     public struct LookAtJobInput {

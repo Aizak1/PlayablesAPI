@@ -40,6 +40,7 @@ namespace animator {
         private const string ANIMATION_JOB = "AnimationJob";
         private const string LOOK_AT_JOB = "LookAtJob";
         private const string TWOBONE_IK_JOB = "TwoBoneIKJob";
+        private const string DAMPING_JOB = "DampingJob";
         private const string CONTROLLER_TYPE = "ControllerType";
         private const string CONTROLLER_NAME = "ControllerName";
 
@@ -407,10 +408,12 @@ namespace animator {
 
                 if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
                     animationJobInput.LookAtJob = new LookAtJobInput();
-
                 } else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
                     animationJobInput.TwoBoneIKJob = new TwoBoneIKJobInput();
+                } else if (animationJobDict.ContainsKey(DAMPING_JOB)) {
+                    animationJobInput.DampingJob = new DampingJobInput();
                 }
+
                 animationInput.AnimationJob = animationJobInput;
                 animInput.AnimationInput = animationInput;
 

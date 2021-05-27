@@ -123,6 +123,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &43131309 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -5116897903442120805, guid: 848edfe5ff9a62642a99e468763ad199, type: 3}
+  m_PrefabInstance: {fileID: 838713087}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &586697920
 GameObject:
   m_ObjectHideFlags: 0
@@ -420,6 +425,13 @@ MonoBehaviour:
     TwoBoneIKSettings:
       EndJoint: {fileID: 1548265391}
       EffectorModel: {fileID: 5435089144418742525, guid: 286b96c716e7bfc45a46fbaa98558c88, type: 3}
+    DampingJobSettings:
+      Joints:
+      - {fileID: 1653001490}
+      - {fileID: 1628001364}
+      - {fileID: 43131309}
+      - {fileID: 1548265391}
+      EffectorModel: {fileID: 5435089144418742525, guid: 286b96c716e7bfc45a46fbaa98558c88, type: 3}
 --- !u!114 &838713091
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -674,6 +686,16 @@ Transform:
 --- !u!4 &1548265391 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1824824446595371411, guid: 848edfe5ff9a62642a99e468763ad199, type: 3}
+  m_PrefabInstance: {fileID: 838713087}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1628001364 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 943223448204509391, guid: 848edfe5ff9a62642a99e468763ad199, type: 3}
+  m_PrefabInstance: {fileID: 838713087}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1653001490 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6280950661766918508, guid: 848edfe5ff9a62642a99e468763ad199, type: 3}
   m_PrefabInstance: {fileID: 838713087}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &2038153995

@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Animations;
+
 public enum Axis {
     Forward,
     Back,
@@ -15,6 +18,7 @@ namespace animationJobs {
     public struct AnimatorJobsSettings {
         public LookAtJobSettings LookAtSettings;
         public TwoBoneIKJobSettings TwoBoneIKSettings;
+        public DampingJobSettings DampingJobSettings;
     }
     [System.Serializable]
     public struct LookAtJobSettings {
@@ -49,6 +53,29 @@ namespace animationJobs {
     public struct TwoBoneIKJobSettings {
         public Transform EndJoint;
         public GameObject EffectorModel;
+    }
+
+    [System.Serializable]
+    public struct DampingJobSettings {
+        public Transform[] Joints;
+        public GameObject EffectorModel;
+    }
+    public struct DampingJobData {
+        public AnimationScriptPlayable ScriptPlayable;
+        public NativeArray<TransformStreamHandle> Handles;
+        public NativeArray<Vector3> LocalPositions;
+        public NativeArray<Quaternion> LocalRotations;
+        public NativeArray<Vector3> Positions;
+        public NativeArray<Vector3> Velocities;
+
+        public void  DisposeData() {
+            Handles.Dispose();
+            LocalPositions.Dispose();
+            LocalRotations.Dispose();
+            Positions.Dispose();
+            Velocities.Dispose();
+
+        }
     }
 
 }
