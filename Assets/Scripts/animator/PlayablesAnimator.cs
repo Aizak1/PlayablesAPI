@@ -85,12 +85,19 @@ namespace animator {
                     if (!parent.inputParent.IsNull()) {
                         if (parent.inputParent.IsPlayableOfType<AnimationLayerMixerPlayable>()) {
                             var maskName = animationInput.AnimationClip.Value.MaskName;
-                            if (resource.masks.ContainsKey(maskName)) {
-                                var layerMixer = (AnimationLayerMixerPlayable)parent.inputParent;
-                                var layerIndex = (uint)layerMixer.GetInputCount() - 1;
-                                var mask = resource.masks[maskName];
-                                layerMixer.SetLayerMaskFromAvatarMask(layerIndex, mask);
+                            var layerMixer = (AnimationLayerMixerPlayable)parent.inputParent;
+                            var layerIndex = (uint)layerMixer.GetInputCount() - 1;
+
+                            var isAdditive = animationInput.AnimationClip.Value.IsAdditive;
+                            layerMixer.SetLayerAdditive(layerIndex, isAdditive);
+
+                            if (!string.IsNullOrEmpty(maskName)) {
+                                if (resource.masks.ContainsKey(maskName)) {
+                                    var mask = resource.masks[maskName];
+                                    layerMixer.SetLayerMaskFromAvatarMask(layerIndex, mask);
+                                }
                             }
+
                         }
                     }
 

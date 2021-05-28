@@ -20,25 +20,32 @@ namespace animator {
 
         private const string INPUT_DATA = "InputData";
         private const string COMMANDS = "Commands";
+
         private const string ADD_INPUT = "AddInput";
         private const string ADD_CONTROLLER = "AddController";
         private const string ADD_OUTPUT = "AddOutput";
-        private const string CONTROLLER = "ControllerInput";
-        private const string RANDOM_WEIGHTS = "RandomWeights";
+
         private const string PARENT = "Parent";
-        private const string ANIMATION_CLIP = "AnimationClip";
         private const string NAME = "Name";
+
+        private const string ANIMATION_CLIP = "AnimationClip";
         private const string MASK_NAME = "MaskName";
         private const string TRANSITION_DURATION = "TransitionDuration";
+        private const string IS_ADDITIVE = "IsAdditive";
+
         private const string ANIMATION_INPUT = "AnimationInput";
         private const string ANIMATION_OUTPUT = "AnimationOutput";
         private const string ANIMATION_MIXER = "AnimationMixer";
         private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
         private const string ANIMATION_BRAIN = "AnimationBrain";
+
         private const string ANIMATION_JOB = "AnimationJob";
         private const string LOOK_AT_JOB = "LookAtJob";
         private const string TWOBONE_IK_JOB = "TwoBoneIKJob";
         private const string DAMPING_JOB = "DampingJob";
+
+        private const string CONTROLLER = "ControllerInput";
+        private const string RANDOM_WEIGHTS = "RandomWeights";
         private const string CONTROLLER_TYPE = "ControllerType";
         private const string CONTROLLER_NAME = "ControllerName";
 
@@ -382,6 +389,13 @@ namespace animator {
                     if (animClip[MASK_NAME].Str.IsSome()) {
                         var maskName = animClip[MASK_NAME].Str.Peel();
                         animationClipInput.MaskName = maskName;
+                    }
+                }
+
+                if (animClip.ContainsKey(IS_ADDITIVE)) {
+                    if (animClip[IS_ADDITIVE].Bool.IsSome()) {
+                        var isAdditive = animClip[IS_ADDITIVE].Bool.Peel();
+                        animationClipInput.IsAdditive = isAdditive;
                     }
                 }
 
