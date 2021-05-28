@@ -70,7 +70,7 @@ namespace animator {
                     Debug.LogError("There is no jsonFile");
                     return;
                 }
-
+                string str=jsonFile.text;
                 Result<JSONType, JSONError> typeRes = VJP.Parse(jsonFile.text, 1024);
 
                 if (typeRes.IsErr()) {
@@ -115,7 +115,7 @@ namespace animator {
             }
         }
 
-        private Option<InputData> LoadInputDataFromJSON(JSONType json) {
+        public Option<InputData> LoadInputDataFromJSON(JSONType json) {
             InputData inputData = new InputData {
                 commands = new List<Command>()
             };
