@@ -444,8 +444,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 060be3e1259f7904e84358638bab8754, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nextPresetCode: 273
-  previousPresetCode: 274
+  nextPresetKey: 273
+  previousPresetKey: 274
+  setupGraphKey: 32
   animator: {fileID: 838713090}
   controllerGroups:
   - ControllerNames:
@@ -467,6 +468,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf2f1746a99b9d4cb157d8ca579349c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  setupKey: 32
+  addKey: 13
   playablesAnimator: {fileID: 838713090}
   jsonFile: {fileID: 4900000, guid: 03869909dca62914aa610223e38ff1d3, type: 3}
 --- !u!1 &963194225

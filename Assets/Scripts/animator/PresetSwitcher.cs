@@ -5,9 +5,11 @@ using UnityEngine;
 namespace animator {
     public class PresetSwitcher : MonoBehaviour {
         [SerializeField]
-        private KeyCode nextPresetCode;
+        private KeyCode nextPresetKey;
         [SerializeField]
-        private KeyCode previousPresetCode;
+        private KeyCode previousPresetKey;
+        [SerializeField]
+        private KeyCode setupGraphKey;
         [SerializeField]
         private PlayablesAnimator animator;
         [SerializeField]
@@ -24,18 +26,27 @@ namespace animator {
                 return;
             }
 
-            if (Input.GetKeyDown(nextPresetCode)) {
+            if (Input.GetKeyDown(setupGraphKey)) {
+                groupIndex = -1;
+            }
+
+            if (Input.GetKeyDown(nextPresetKey)) {
                 groupIndex += 1;
+
                 if (groupIndex >= controllerGroups.Length) {
                     groupIndex = 0;
                 }
+
                 animator.Brain.ActivateControllers(controllerGroups[groupIndex].ControllerNames);
             }
-            if (Input.GetKeyDown(previousPresetCode)) {
+
+            if (Input.GetKeyDown(previousPresetKey)) {
                 groupIndex -= 1;
+
                 if (groupIndex < 0) {
                     groupIndex = controllerGroups.Length - 1;
                 }
+
                 animator.Brain.ActivateControllers(controllerGroups[groupIndex].ControllerNames);
             }
         }

@@ -34,6 +34,8 @@ namespace animator {
             foreach (var name in names) {
                 if (AnimControllers.ContainsKey(name)) {
                     ActivateController(name);
+                } else {
+                    Debug.LogError($"No controller with name : {name}");
                 }
             }
         }
@@ -65,10 +67,12 @@ namespace animator {
             controller.isEnable = false;
             controller.CurrentAnimationIndex = 0;
             controller.NextAnimationIndex = 0;
+
             foreach (var item in controller.PlayableAnimations) {
                 item.PlayableClip.SetTime(item.PlayableClip.GetAnimationClip().length);
                 item.Parent.inputParent.SetInputWeight(item.PlayableClip, 0);
             }
+
             AnimControllers[name] = controller;
         }
 
@@ -82,8 +86,10 @@ namespace animator {
             controller.isEnable = true;
 
             var firstAnim = controller.PlayableAnimations[0];
+
             firstAnim.PlayableClip.SetTime(0);
             firstAnim.Parent.inputParent.SetInputWeight(firstAnim.PlayableClip, 1);
+
             AnimControllers[name] = controller;
         }
 
@@ -97,6 +103,7 @@ namespace animator {
             if (controller.NextAnimationIndex >= controller.PlayableAnimations.Count
                 || (controller.NextAnimationIndex == controller.CurrentAnimationIndex
                 && controller.PlayableAnimations.Count != 1)){
+
                 controller.NextAnimationIndex = GetNextAnimationIndex(controller);
 
             } else {
@@ -118,6 +125,7 @@ namespace animator {
                 current = controller.PlayableAnimations[controller.CurrentAnimationIndex];
                 current.PlayableClip.SetTime(0);
             }
+
             AnimControllers[name] = controller;
         }
 

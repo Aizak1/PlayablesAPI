@@ -14,6 +14,10 @@ namespace animator {
 
     public class AnimatorDataParser : MonoBehaviour {
         [SerializeField]
+        private KeyCode setupKey;
+        [SerializeField]
+        private KeyCode addKey;
+        [SerializeField]
         private PlayablesAnimator playablesAnimator;
         [SerializeField]
         private TextAsset jsonFile;
@@ -49,49 +53,19 @@ namespace animator {
         private const string CONTROLLER_TYPE = "ControllerType";
         private const string CONTROLLER_NAME = "ControllerName";
 
+        private bool isSetup;
+        private bool isAdd;
+
         private void Update() {
-            if (Input.GetKeyDown(KeyCode.Space)) {
-                if (jsonFile == null) {
-                    Debug.LogError("There is no jsonFile");
-                    return;
-                }
-
-                Result<JSONType, JSONError> typeRes = VJP.Parse(jsonFile.text, 1024);
-
-                if (typeRes.IsErr()) {
-                    JSONError error = typeRes.AsErr();
-                    Debug.LogError(error.type);
-                    return;
-                }
-
-                JSONType type = typeRes.AsOk();
-
-                if (type.Obj.IsNone()) {
-                    Debug.LogError("JSON file is Empty");
-                    return;
-                }
-
-                var obj = type.Obj.Peel();
-
-                if (!obj.ContainsKey(INPUT_DATA)) {
-                    Debug.LogError("No Input Data field");
-                    return;
-                }
-
-                JSONType json = obj[INPUT_DATA];
-                Option<InputData> optionInputData = LoadInputDataFromJSON(json);
-
-                if (optionInputData.IsNone()) {
-                    Debug.LogError("Incorrect input data");
-                    return;
-                }
-
-                var inputData = optionInputData.Peel();
-                var commands = inputData.commands;
-                playablesAnimator.Setup(commands);
+            if (Input.GetKeyDown(setupKey)) {
+                isSetup = true;
             }
 
-            if (Input.GetKeyDown(KeyCode.KeypadEnter)) {
+            if (Input.GetKeyDown(addKey)) {
+                isAdd = true;
+            }
+
+            if (isSetup || isAdd) {
                 if (jsonFile == null) {
                     Debug.LogError("There is no jsonFile");
                     return;
@@ -129,13 +103,22 @@ namespace animator {
 
                 var inputData = optionInputData.Peel();
                 var commands = inputData.commands;
-                playablesAnimator.AddNewCommands(commands);
+
+                if (isSetup) {
+                    playablesAnimator.Setup(commands);
+                    isSetup = false;
+
+                } else {
+                    playablesAnimator.AddNewCommands(commands);
+                    isAdd = false;
+                }
             }
         }
 
         private Option<InputData> LoadInputDataFromJSON(JSONType json) {
-            InputData inputData = new InputData();
-            inputData.commands = new List<Command>();
+            InputData inputData = new InputData {
+                commands = new List<Command>()
+            };
 
             if (json.Obj.IsNone()) {
                 Debug.LogError("Input Data field is Empty");
@@ -198,6 +181,7 @@ namespace animator {
                     Debug.LogError("AddOutput field is empty");
                     return command;
                 }
+
                 var dict = inputCommand[ADD_OUTPUT].Obj.Peel();
                 command.AddOutput = GetOutput(dict);
 
@@ -221,8 +205,10 @@ namespace animator {
                 Debug.LogError("AnimationOutput field is empty");
                 return null;
             }
+
             var outputDict = outputcommandDict[ANIMATION_OUTPUT].Obj.Peel();
             var animationOutput = new AnimationOutput();
+
             if (!outputDict.ContainsKey(NAME)) {
                 Debug.LogError("No Name field");
                 return null;
@@ -235,6 +221,7 @@ namespace animator {
 
             animationOutput.Name = outputDict[NAME].Str.Peel();
             addOutputCommand.AnimationOutput = animationOutput;
+
             return addOutputCommand;
         }
 
@@ -263,6 +250,7 @@ namespace animator {
                 Debug.LogError("ControllerType field is empty");
                 return null;
             }
+
             animationController.ControllerType = controllerDict[CONTROLLER_TYPE].Str.Peel();
 
             if (!controllerDict.ContainsKey(NAME)) {
@@ -274,9 +262,8 @@ namespace animator {
                 Debug.LogError("ControllerType field is empty");
                 return null;
             }
+
             animationController.Name = controllerDict[NAME].Str.Peel();
-
-
 
             List<int> weights = new List<int>();
 
@@ -351,7 +338,6 @@ namespace animator {
 
             animationInput.Name = animInputDict[NAME].Str.Peel();
 
-
             if (animInputDict.ContainsKey(ANIMATION_CLIP)) {
 
                 if (animInputDict[ANIMATION_CLIP].Obj.IsNone()) {
@@ -374,6 +360,7 @@ namespace animator {
 
                 string tempDuration = animClip[TRANSITION_DURATION].Num.Peel();
                 CultureInfo ci = CultureInfo.InvariantCulture;
+
                 if (!float.TryParse(tempDuration, NumberStyles.Any, ci, out float duration)) {
                     Debug.LogError("Animation Transition Duration isn't number");
                     return null;
@@ -428,10 +415,17 @@ namespace animator {
 
                 if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
                     animationJobInput.LookAtJob = new LookAtJobInput();
+
                 } else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
                     animationJobInput.TwoBoneIKJob = new TwoBoneIKJobInput();
+
                 } else if (animationJobDict.ContainsKey(DAMPING_JOB)) {
                     animationJobInput.DampingJob = new DampingJobInput();
+
+                } else {
+                    Debug.LogError("Unknown job");
+                    return null;
+
                 }
 
                 animationInput.AnimationJob = animationJobInput;
