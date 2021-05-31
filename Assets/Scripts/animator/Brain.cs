@@ -64,6 +64,8 @@ namespace animator {
         private void DeactivateController(string name) {
             var controller = AnimControllers[name];
 
+            ChangeBranchWeight(controller.PlayableNodes, 0);
+
             if (!controller.IsEnable) {
                 return;
             }
@@ -78,11 +80,14 @@ namespace animator {
                 item.Parent.inputParent.SetInputWeight(item.PlayableClip, 0);
             }
 
+
             AnimControllers[name] = controller;
         }
 
         private void ActivateController(string name) {
             var controller = AnimControllers[name];
+
+            ChangeBranchWeight(controller.PlayableNodes, 1);
 
             if (controller.IsEnable) {
                 return;
@@ -96,6 +101,8 @@ namespace animator {
                 firstAnim.PlayableClip.SetTime(0);
                 firstAnim.Parent.inputParent.SetInputWeight(firstAnim.PlayableClip, 1);
             }
+
+
             AnimControllers[name] = controller;
         }
 
@@ -233,5 +240,14 @@ namespace animator {
             return nextIndex;
         }
 
+        private void ChangeBranchWeight(List<PlayableNode> animations, float weight) {
+            foreach (var item in animations) {
+                Playable node = item.PlayableClip.GetOutput(0);
+                while (node.GetPlayableType().Name != this.GetType().Name) {
+                    node.GetOutput(0).SetInputWeight(node, weight);
+                    node = node.GetOutput(0);
+                }
+            }
+        }
     }
 }

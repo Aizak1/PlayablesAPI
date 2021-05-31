@@ -5,7 +5,7 @@ using UnityEngine.Playables;
 
 namespace animator {
     public struct PlayableNode {
-        public Playable PlayableClip;
+        public AnimationClipPlayable PlayableClip;
         public float TransitionDuration;
         public PlayableParent Parent;
         public float AnimationLength;

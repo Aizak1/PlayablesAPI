@@ -450,12 +450,11 @@ MonoBehaviour:
   animator: {fileID: 838713090}
   controllerGroups:
   - ControllerNames:
-    - close1
+    - close
   - ControllerNames:
-    - close2
+    - open
   - ControllerNames:
-    - close1
-    - close2
+    - random
 --- !u!114 &838713092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -471,7 +470,7 @@ MonoBehaviour:
   setupKey: 32
   addKey: 13
   playablesAnimator: {fileID: 838713090}
-  jsonFile: {fileID: 4900000, guid: 03869909dca62914aa610223e38ff1d3, type: 3}
+  jsonFile: {fileID: 4900000, guid: 59653bf99b613f64185fb68aa51ae29c, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

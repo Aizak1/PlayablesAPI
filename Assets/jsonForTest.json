@@ -1,0 +1,199 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "Name":"main"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationBrain":{
+                        },
+                        "Name":"brain",
+                        "Parent":"main"
+                    }
+                }
+            },{
+                "AddController":{
+                    "ControllerInput":{
+                        "ControllerType": "CloseCircle",
+                        "Name": "close"
+                    }
+                }
+            },{
+                "AddController":{
+                    "ControllerInput":{
+                        "ControllerType": "OpenCircle",
+                        "Name": "open"
+                    }
+                }
+            },{
+                "AddController":{
+                    "ControllerInput":{
+                        "ControllerType": "Random",
+                        "Name": "random",
+                        "RandomWeights": [10, 20, 30]
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "Name":"mixer1",
+                        "Parent":"brain"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationLayerMixer":{
+                        },
+                        "Name":"layerMixer1",
+                        "Parent":"mixer1"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationJob":{
+                            "LookAtJob":{
+                            }
+                        },
+                        "Name":"lookJob",
+                        "Parent":"layerMixer1"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationJob":{
+                            "TwoBoneIKJob":{
+                            }
+                        },
+                        "Name":"twoBone",
+                        "Parent":"layerMixer1"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationJob":{
+                            "DampingJob":{
+                            }
+                        },
+                        "Name":"damping",
+                        "Parent":"layerMixer1"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "Name":"mixer2",
+                        "Parent":"lookJob"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "Name":"mixer3",
+                        "Parent":"twoBone"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "Name":"mixer4",
+                        "Parent":"damping"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5,
+                            "ControllerName": "close"
+                        },
+                        "Name":"Clapping",
+                        "Parent":"mixer2"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5,
+                            "ControllerName": "close"
+                        },
+                        "Name":"Flair",
+                        "Parent":"mixer2"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5,
+                            "ControllerName": "open"
+                        },
+                        "Name":"Silly Dancing",
+                        "Parent":"mixer3"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5,
+                            "ControllerName": "open"
+                        },
+                        "Name":"Spin In Place",
+                        "Parent":"mixer3"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5,
+                            "ControllerName": "random"
+                        },
+                        "Name":"Silly Dancing",
+                        "Parent":"mixer4"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5,
+                            "ControllerName": "random"
+                        },
+                        "Name":"Spin In Place",
+                        "Parent":"mixer4"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "TransitionDuration":0.5,
+                            "ControllerName": "random"
+                        },
+                        "Name":"Clapping",
+                        "Parent":"mixer4"
+                    }
+                }
+            }
+        ]
+    }
+}
