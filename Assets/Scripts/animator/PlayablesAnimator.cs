@@ -23,7 +23,7 @@ namespace animator {
         private Animator animator;
         public Brain Brain;
 
-        Dictionary<string, PlayableParent> parents;
+        private Dictionary<string, PlayableParent> parents;
 
         public void Setup(List<Command> commands) {
             if (graph.IsValid()) {
@@ -381,6 +381,10 @@ namespace animator {
 
 
             }
+        }
+
+        public PlayableGraph GraphPeel() {
+            return graph;
         }
 
         private void OnDestroy() {
