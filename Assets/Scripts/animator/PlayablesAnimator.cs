@@ -98,8 +98,7 @@ namespace animator {
                     }
                 }
 
-                AnimationClipPlayable animation =
-                    AnimationClipPlayable.Create(graph, clip);
+                AnimationClipPlayable animation = AnimationClipPlayable.Create(graph, clip);
                 ConnectNodeToParent(parent, animation);
 
                 if (!parent.inputParent.IsNull()) {
@@ -126,7 +125,7 @@ namespace animator {
                     }
                 }
 
-                var newAnimation = new PlayableAnimation {
+                var newAnimation = new PlayableNode {
                     Parent = parent,
                     PlayableClip = animation,
                     TransitionDuration = duration,
@@ -139,7 +138,7 @@ namespace animator {
 
                 newAnimation.PlayableClip.SetTime(length);
 
-                Brain.AnimControllers[controllerName].PlayableAnimations.Add(newAnimation);
+                Brain.AnimControllers[controllerName].PlayableNodes.Add(newAnimation);
 
             } else if (animationInput.AnimationMixer.HasValue) {
 
@@ -334,13 +333,13 @@ namespace animator {
 
             controller.ControllerType = type;
 
-            controller.PlayableAnimations = new List<PlayableAnimation>();
+            controller.PlayableNodes = new List<PlayableNode>();
             controller.RandomWeights = input.RandomWeights;
 
             controller.CurrentAnimationIndex = 0;
             controller.NextAnimationIndex = 0;
 
-            controller.isEnable = false;
+            controller.IsEnable = false;
 
             if (Brain.AnimControllers == null) {
                 Debug.LogError("No Animation Brain");

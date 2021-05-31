@@ -27,9 +27,7 @@ namespace animator {
         }
 
         public void ActivateControllers(string[] names) {
-            foreach (var name in ControllerNames) {
-                DeactivateController(name);
-            }
+            DeactivateAllControllers();
 
             foreach (var name in names) {
                 if (AnimControllers.ContainsKey(name)) {
@@ -37,6 +35,12 @@ namespace animator {
                 } else {
                     Debug.LogError($"No controller with name : {name}");
                 }
+            }
+        }
+
+        public void DeactivateAllControllers() {
+            foreach (var name in ControllerNames) {
+                DeactivateController(name);
             }
         }
 
@@ -60,16 +64,17 @@ namespace animator {
         private void DeactivateController(string name) {
             var controller = AnimControllers[name];
 
-            if (!controller.isEnable) {
+            if (!controller.IsEnable) {
                 return;
             }
 
-            controller.isEnable = false;
+            controller.IsEnable = false;
             controller.CurrentAnimationIndex = 0;
             controller.NextAnimationIndex = 0;
 
-            foreach (var item in controller.PlayableAnimations) {
-                item.PlayableClip.SetTime(item.PlayableClip.GetAnimationClip().length);
+
+            foreach (var item in controller.PlayableNodes) {
+                item.PlayableClip.SetTime(item.AnimationLength);
                 item.Parent.inputParent.SetInputWeight(item.PlayableClip, 0);
             }
 
@@ -79,41 +84,42 @@ namespace animator {
         private void ActivateController(string name) {
             var controller = AnimControllers[name];
 
-            if (controller.isEnable) {
+            if (controller.IsEnable) {
                 return;
             }
 
-            controller.isEnable = true;
+            controller.IsEnable = true;
 
-            var firstAnim = controller.PlayableAnimations[0];
+            if (controller.PlayableNodes.Count != 0) {
+                var firstAnim = controller.PlayableNodes[0];
 
-            firstAnim.PlayableClip.SetTime(0);
-            firstAnim.Parent.inputParent.SetInputWeight(firstAnim.PlayableClip, 1);
-
+                firstAnim.PlayableClip.SetTime(0);
+                firstAnim.Parent.inputParent.SetInputWeight(firstAnim.PlayableClip, 1);
+            }
             AnimControllers[name] = controller;
         }
 
         private void ProcessController(string name) {
             var controller = AnimControllers[name];
 
-            if (!controller.isEnable) {
+            if (!controller.IsEnable) {
                 return;
             }
 
-            if (controller.NextAnimationIndex >= controller.PlayableAnimations.Count
+            if (controller.NextAnimationIndex >= controller.PlayableNodes.Count
                 || (controller.NextAnimationIndex == controller.CurrentAnimationIndex
-                && controller.PlayableAnimations.Count != 1)){
+                && controller.PlayableNodes.Count != 1)){
 
                 controller.NextAnimationIndex = GetNextAnimationIndex(controller);
 
             } else {
-                var current = controller.PlayableAnimations[controller.CurrentAnimationIndex];
+                var current = controller.PlayableNodes[controller.CurrentAnimationIndex];
 
                 if (!IsTimeToMakeTransition(current)) {
                     return;
                 }
 
-                var next = controller.PlayableAnimations[controller.NextAnimationIndex];
+                var next = controller.PlayableNodes[controller.NextAnimationIndex];
 
                 MakeTransition(current, next);
 
@@ -122,14 +128,14 @@ namespace animator {
                 }
 
                 controller.CurrentAnimationIndex = controller.NextAnimationIndex;
-                current = controller.PlayableAnimations[controller.CurrentAnimationIndex];
+                current = controller.PlayableNodes[controller.CurrentAnimationIndex];
                 current.PlayableClip.SetTime(0);
             }
 
             AnimControllers[name] = controller;
         }
 
-        private bool IsEndOfTransition(PlayableAnimation current) {
+        private bool IsEndOfTransition(PlayableNode current) {
             float length = current.AnimationLength;
             float currentClipTime = (float)current.PlayableClip.GetTime();
 
@@ -140,7 +146,7 @@ namespace animator {
             return false;
         }
 
-        private void MakeTransition(PlayableAnimation current, PlayableAnimation next) {
+        private void MakeTransition(PlayableNode current, PlayableNode next) {
             float length = current.AnimationLength;
             float duration = current.TransitionDuration;
             float startTransitionTime = length - duration;
@@ -154,8 +160,8 @@ namespace animator {
 
         private void SpreadWeight(
             float weight,
-            PlayableAnimation current,
-            PlayableAnimation next
+            PlayableNode current,
+            PlayableNode next
             ) {
             if (current.Parent.inputParent.IsNull()) {
                 return;
@@ -164,7 +170,7 @@ namespace animator {
             next.Parent.inputParent.SetInputWeight(next.PlayableClip, weight);
         }
 
-        public bool IsTimeToMakeTransition(PlayableAnimation current) {
+        public bool IsTimeToMakeTransition(PlayableNode current) {
             float length = current.AnimationLength;
             float duration = current.TransitionDuration;
             float startTransitionTime = length - duration;
@@ -185,7 +191,7 @@ namespace animator {
                     break;
                 case ControllerType.CloseCircle:
                     int currentAnimationIndex = controller.CurrentAnimationIndex;
-                    int animationsCount = controller.PlayableAnimations.Count;
+                    int animationsCount = controller.PlayableNodes.Count;
                     if (currentAnimationIndex + 1 >= animationsCount) {
                         nextIndex = 0;
                     } else {
@@ -226,5 +232,6 @@ namespace animator {
 
             return nextIndex;
         }
+
     }
 }
