@@ -21,9 +21,10 @@ namespace animator {
 
         private PlayableGraph graph;
         private Animator animator;
-        public Brain Brain;
+        public Brain brain;
 
         private Dictionary<string, PlayableParent> parents;
+        private Dictionary<string, ClipNode> clipNodes;
 
         public void Setup(List<Command> commands) {
             if (graph.IsValid()) {
@@ -36,6 +37,7 @@ namespace animator {
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
 
             parents = new Dictionary<string, PlayableParent>();
+            clipNodes = new Dictionary<string, ClipNode>();
 
             for (int i = 0; i < commands.Count; i++) {
                 ProcessCommand(commands[i]);
@@ -69,20 +71,30 @@ namespace animator {
 
         private void ProcessAddInputCommand(Command command) {
             AddInputCommand inputCommand = command.AddInput.Value;
-            var animationInput = inputCommand.AnimationInput;
+            var animationInput = inputCommand.animationInput;
 
-            if (!parents.ContainsKey(animationInput.Parent)) {
-                Debug.LogError($"Invalid parent name: {animationInput.Parent}");
+            if (!parents.ContainsKey(animationInput.parent)) {
+                Debug.LogError($"Invalid parent name: {animationInput.parent}");
                 return;
             }
 
-            PlayableParent parent = parents[animationInput.Parent];
-            string name = animationInput.Name;
+            PlayableParent parent = parents[animationInput.parent];
+            string name = animationInput.name;
+            float initialWeight = animationInput.initialWeight;
 
-            if (animationInput.AnimationClip.HasValue) {
+            if (animationInput.animationClip.HasValue) {
+                string clipName = animationInput.animationClip.Value.clipName;
+                if (clipNodes.ContainsKey(name)) {
+                    Debug.LogError($"Animation {name} is already exists");
+                    return;
+                }
+                if (!resource.animations.ContainsKey(clipName)) {
+                    Debug.LogError($"Invalid clip name in {name}");
+                    return;
+                }
 
-                AnimationClip clip = resource.animations[name];
-                float duration = animationInput.AnimationClip.Value.TransitionDuration;
+                AnimationClip clip = resource.animations[clipName];
+                float duration = animationInput.animationClip.Value.transitionDuration;
                 float length = clip.length;
 
                 if (length < duration) {
@@ -90,57 +102,23 @@ namespace animator {
                     return;
                 }
 
-                var controllerName = animationInput.AnimationClip.Value.ControllerName;
-                if (Brain != null) {
-                    if (!Brain.AnimControllers.ContainsKey(controllerName)) {
-                        Debug.LogError($"Invalid controller name {controllerName} in {name}");
-                        return;
-                    }
-                }
-
                 AnimationClipPlayable animation = AnimationClipPlayable.Create(graph, clip);
-                ConnectNodeToParent(parent, animation);
+                ConnectNodeToParent(parent, animation, initialWeight);
 
-                if (!parent.inputParent.IsNull()) {
-                    if (parent.inputParent.IsPlayableOfType<AnimationLayerMixerPlayable>()) {
-
-                        var maskName = animationInput.AnimationClip.Value.MaskName;
-                        var layerMixer = (AnimationLayerMixerPlayable)parent.inputParent;
-                        var layerIndex = (uint)layerMixer.GetInputCount() - 1;
-
-                        var isAdditive = animationInput.AnimationClip.Value.IsAdditive;
-                        layerMixer.SetLayerAdditive(layerIndex, isAdditive);
-
-                        if (!string.IsNullOrEmpty(maskName)) {
-                            if (resource.masks.ContainsKey(maskName)) {
-
-                                var mask = resource.masks[maskName];
-                                layerMixer.SetLayerMaskFromAvatarMask(layerIndex, mask);
-
-                            } else {
-                                Debug.LogError($"No mask with name {maskName}");
-
-                            }
-                        }
-                    }
-                }
-
-                var newAnimation = new PlayableNode {
+                var newAnimation = new ClipNode {
                     Parent = parent,
                     PlayableClip = animation,
                     TransitionDuration = duration,
                     AnimationLength = length
                 };
 
-                if (Brain == null || Brain.AnimControllers.Count == 0) {
+                if (brain == null) {
                     return;
                 }
-
                 newAnimation.PlayableClip.SetTime(length);
+                clipNodes.Add(name, newAnimation);
 
-                Brain.AnimControllers[controllerName].PlayableNodes.Add(newAnimation);
-
-            } else if (animationInput.AnimationMixer.HasValue) {
+            } else if (animationInput.animationMixer.HasValue) {
 
                 if (parents.ContainsKey(name)) {
                     Debug.LogError($"Mixer with name {name} is already exists");
@@ -155,9 +133,9 @@ namespace animator {
 
                 parents.Add(name, playableParent);
 
-                ConnectNodeToParent(parent, playable);
+                ConnectNodeToParent(parent, playable, initialWeight);
 
-            } else if (animationInput.AnimationLayerMixer.HasValue) {
+            } else if (animationInput.animationLayerMixer.HasValue) {
                 if (parents.ContainsKey(name)) {
                     Debug.LogError($"Layer Mixer with name {name} is already exists");
                     return;
@@ -171,18 +149,18 @@ namespace animator {
 
                 parents.Add(name, playableParent);
 
-                ConnectNodeToParent(parent, playable);
+                ConnectNodeToParent(parent, playable, initialWeight);
 
-            } else if (animationInput.AnimationJob.HasValue) {
+            } else if (animationInput.animationJob.HasValue) {
 
                 if (parents.ContainsKey(name)) {
                     Debug.LogError($"Job with name {name} is already exists");
                     return;
                 }
 
-                var job = animationInput.AnimationJob.Value;
+                var job = animationInput.animationJob.Value;
 
-                if (job.LookAtJob.HasValue) {
+                if (job.lookAtJob.HasValue) {
 
                     animator.fireEvents = false;
                     var lookAtSettings = jobsSettings.LookAtSettings;
@@ -205,9 +183,9 @@ namespace animator {
 
                     parents.Add(name, playableParent);
 
-                    ConnectNodeToParent(parent, lookAt);
+                    ConnectNodeToParent(parent, lookAt, initialWeight);
 
-                } else if (job.TwoBoneIKJob.HasValue) {
+                } else if (job.twoBoneIKJob.HasValue) {
 
                     var endJoint = jobsSettings.TwoBoneIKSettings.EndJoint;
                     var effector = jobsSettings.TwoBoneIKSettings.EffectorModel;
@@ -227,9 +205,9 @@ namespace animator {
 
                     parents.Add(name, playableParent);
 
-                    ConnectNodeToParent(parent, twoBone);
+                    ConnectNodeToParent(parent, twoBone, initialWeight);
 
-                } else if (job.DampingJob.HasValue) {
+                } else if (job.dampingJob.HasValue) {
 
                     var joints = jobsSettings.DampingJobSettings.Joints;
                     var numJoints = joints.Length;
@@ -290,11 +268,11 @@ namespace animator {
 
                     parents.Add(name, playableParent);
 
-                    ConnectNodeToParent(parent, dampingPlayable);
+                    ConnectNodeToParent(parent, dampingPlayable, initialWeight);
 
                 }
 
-            } else if (animationInput.AnimationBrain.HasValue) {
+            } else if (animationInput.animationBrain.HasValue) {
 
                 if (parents.ContainsKey(name)) {
                     Debug.LogError($"Brain with name {name} is already exists");
@@ -303,8 +281,8 @@ namespace animator {
 
                 var brainNode = ScriptPlayable<Brain>.Create(graph);
 
-                Brain = brainNode.GetBehaviour();
-                Brain.Initialize();
+                brain = brainNode.GetBehaviour();
+                brain.Initialize();
 
                 var playableParent = new PlayableParent {
                     inputParent = brainNode
@@ -312,47 +290,65 @@ namespace animator {
 
                 parents.Add(name, playableParent);
 
-                ConnectNodeToParent(parent, brainNode);
+                ConnectNodeToParent(parent, brainNode,initialWeight);
             }
         }
 
         private void ProcessAddControllerCommand(Command command) {
-            var input = command.AddContoller.Value.ControllerInput;
-
-            if (Brain.AnimControllers.ContainsKey(input.Name)) {
-                Debug.LogError($"Controller with name {input.Name} is already exists");
-                return;
-            }
-
-            var controller = new AnimationController();
-
-            if (!Enum.TryParse(input.ControllerType, out ControllerType type)) {
-                Debug.LogError($"Invalid controller type {input.ControllerType}");
-                return;
-            }
-
-            controller.ControllerType = type;
-
-            controller.PlayableNodes = new List<PlayableNode>();
-            controller.RandomWeights = input.RandomWeights;
-
-            controller.CurrentAnimationIndex = 0;
-            controller.NextAnimationIndex = 0;
-
-            controller.IsEnable = false;
-
-            if (Brain.AnimControllers == null) {
+            var controller = command.AddContoller.Value.animationController;
+            if (brain.AnimControllers == null) {
                 Debug.LogError("No Animation Brain");
                 return;
             }
+            if (brain.AnimControllers.ContainsKey(controller.name)) {
+                Debug.LogError($"Controller with name {controller.name} is already exists");
+                return;
+            }
+            if (controller.weightController.HasValue) {
+                var weightController = controller.weightController.Value;
+                var weightExecuter = new WeightControllerExecutor();
+                if (weightController.circleController.HasValue) {
+                    var circleExecuter = new CircleControllerExecutor();
+                    circleExecuter.isClose = weightController.circleController.Value.isClose;
+                    weightExecuter.additionalControllerExecuter = circleExecuter;
 
-            Brain.AnimControllers.Add(input.Name, controller);
-            Brain.ControllerNames.Add(input.Name);
+                } else if (weightController.randomController.HasValue) {
+                    var randomWeights = weightController.randomController.Value.randomWeights;
+                    if (randomWeights == null) {
+                        Debug.LogError($"No randomWeights on {controller.name}");
+                        return;
+                    }
+                    var randomExecuter = new RandomControllerExecutor();
+                    randomExecuter.randomWeights = randomWeights;
+                    weightExecuter.additionalControllerExecuter = randomExecuter;
+                } else {
+                    Debug.LogError("Unknown additionalController");
+                    return;
+                }
+
+                List<ClipNode> animationNodes = new List<ClipNode>();
+                foreach (var item in controller.weightController.Value.animationNames) {
+                    if (!clipNodes.ContainsKey(item)) {
+                        Debug.LogError("Unknown ClipNode Name");
+                        continue;
+                    }
+                    animationNodes.Add(clipNodes[item]);
+                }
+                animationNodes[0].PlayableClip.SetTime(0);
+
+                weightExecuter.animationNodes = animationNodes;
+                brain.AnimControllers.Add(controller.name, weightExecuter);
+
+
+            } else {
+                Debug.LogError("No such controller");
+                return;
+            }
         }
 
         private void ProcessAddOutputCommand(Command command) {
-            var animOutput = command.AddOutput.Value.AnimationOutput;
-            string outputName = animOutput.Name;
+            var animOutput = command.AddOutput.Value.animationOutput;
+            string outputName = animOutput.name;
 
             if (parents.ContainsKey(outputName)) {
                 Debug.LogError($"Output with name {outputName} is already exists");
@@ -368,17 +364,12 @@ namespace animator {
             parents.Add(outputName, parentPlayable);
         }
 
-        private void ConnectNodeToParent(PlayableParent parent, Playable playable) {
+        private void ConnectNodeToParent(PlayableParent parent, Playable playable, float weight) {
             if (parent.inputParent.IsNull()) {
                 parent.outputParent.SetSourcePlayable(playable);
             } else {
-                bool isAnimation = playable.IsPlayableOfType<AnimationClipPlayable>();
                 parent.inputParent.AddInput(playable, 0);
-                if (!isAnimation) {
-                    parent.inputParent.SetInputWeight(playable, 1);
-                }
-
-
+                parent.inputParent.SetInputWeight(playable, weight);
             }
         }
 

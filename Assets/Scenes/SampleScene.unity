@@ -441,20 +441,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 838713088}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 060be3e1259f7904e84358638bab8754, type: 3}
+  m_Script: {fileID: 11500000, guid: 817eef7f132fec340973aecdbfec1d3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nextPresetKey: 273
-  previousPresetKey: 274
-  setupGraphKey: 32
-  animator: {fileID: 838713090}
-  controllerGroups:
-  - ControllerNames:
-    - close
-  - ControllerNames:
-    - open
-  - ControllerNames:
-    - random
+  setupKey: 32
+  addKey: 13
+  playablesAnimator: {fileID: 838713090}
+  parser: {fileID: 838713092}
+  jsonFile: {fileID: 4900000, guid: 70ca0d5bfb3e1d94cae5a21937a67d7f, type: 3}
 --- !u!114 &838713092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -467,10 +461,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebf2f1746a99b9d4cb157d8ca579349c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  setupKey: 32
-  addKey: 13
-  playablesAnimator: {fileID: 838713090}
-  jsonFile: {fileID: 4900000, guid: 59653bf99b613f64185fb68aa51ae29c, type: 3}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

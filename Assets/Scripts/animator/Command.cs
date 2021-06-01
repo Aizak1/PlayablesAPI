@@ -13,15 +13,15 @@ namespace animator {
     }
 
     public struct AddInputCommand {
-        public AnimationInput AnimationInput;
+        public AnimationInput animationInput;
     }
 
     public struct AddControllerCommand {
-        public AnimationControllerInput ControllerInput;
+        public AnimationController animationController;
     }
 
     public struct AddOutputCommand {
-        public AnimationOutput AnimationOutput;
+        public AnimationOutput animationOutput;
     }
 
 }

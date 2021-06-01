@@ -1,0 +1,81 @@
+{
+    "InputData":{
+        "commands":[
+            {
+                "AddOutput":{
+                    "animationOutput":{
+                        "name":"main"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "animationInput":{
+                        "animationBrain":{
+                        },
+                        "name":"brain",
+                        "parent":"main",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "animationInput":{
+                        "animationMixer":{
+                        },
+                        "name":"mixer1",
+                        "parent":"brain",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "animationInput":{
+                        "animationClip":{
+                            "transitionDuration":0.5,
+                            "clipName": "Clapping"
+                        },
+                        "name":"anim1",
+                        "parent":"mixer1",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "animationInput":{
+                        "animationClip":{
+                            "transitionDuration":0.5,
+                            "clipName": "Flair"
+                        },
+                        "name":"anim2",
+                        "parent":"mixer1",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "animationInput":{
+                        "animationClip":{
+                            "transitionDuration":0.5,
+                            "clipName": "Silly Dancing"
+                        },
+                        "name":"anim3",
+                        "parent":"mixer1",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddController":{
+                    "animationController":{
+                        "name": "close",
+                        "weightController":{
+                            "circleController":{
+                                "isClose": true
+                            },
+                            "animationNames":["anim3", "anim2", "anim1"]
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

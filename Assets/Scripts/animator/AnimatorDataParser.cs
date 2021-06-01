@@ -13,109 +13,83 @@ namespace animator {
     }
 
     public class AnimatorDataParser : MonoBehaviour {
-        [SerializeField]
-        private KeyCode setupKey;
-        [SerializeField]
-        private KeyCode addKey;
-        [SerializeField]
-        private PlayablesAnimator playablesAnimator;
-        [SerializeField]
-        private TextAsset jsonFile;
+
 
         private const string INPUT_DATA = "InputData";
-        private const string COMMANDS = "Commands";
+        private const string COMMANDS = "commands";
 
         private const string ADD_INPUT = "AddInput";
         private const string ADD_CONTROLLER = "AddController";
         private const string ADD_OUTPUT = "AddOutput";
 
-        private const string PARENT = "Parent";
-        private const string NAME = "Name";
+        private const string PARENT = "parent";
+        private const string NAME = "name";
 
-        private const string ANIMATION_CLIP = "AnimationClip";
-        private const string MASK_NAME = "MaskName";
-        private const string TRANSITION_DURATION = "TransitionDuration";
-        private const string IS_ADDITIVE = "IsAdditive";
+        private const string ANIMATION_CLIP = "animationClip";
+        private const string CLIP_NAME = "clipName";
+        private const string MASK_NAME = "maskName";
+        private const string TRANSITION_DURATION = "transitionDuration";
+        private const string IS_ADDITIVE = "isAdditive";
 
-        private const string ANIMATION_INPUT = "AnimationInput";
-        private const string ANIMATION_OUTPUT = "AnimationOutput";
-        private const string ANIMATION_MIXER = "AnimationMixer";
-        private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
-        private const string ANIMATION_BRAIN = "AnimationBrain";
+        private const string ANIMATION_INPUT = "animationInput";
+        private const string ANIMATION_OUTPUT = "animationOutput";
+        private const string ANIMATION_MIXER = "animationMixer";
+        private const string ANIMATION_LAYER_MIXER = "animationLayerMixer";
+        private const string ANIMATION_BRAIN = "animationBrain";
 
-        private const string ANIMATION_JOB = "AnimationJob";
-        private const string LOOK_AT_JOB = "LookAtJob";
-        private const string TWOBONE_IK_JOB = "TwoBoneIKJob";
-        private const string DAMPING_JOB = "DampingJob";
+        private const string ANIMATION_JOB = "animationJob";
+        private const string LOOK_AT_JOB = "lookAtJob";
+        private const string TWOBONE_IK_JOB = "twoBoneIKJob";
+        private const string DAMPING_JOB = "dampingJob";
 
-        private const string CONTROLLER = "ControllerInput";
-        private const string RANDOM_WEIGHTS = "RandomWeights";
-        private const string CONTROLLER_TYPE = "ControllerType";
-        private const string CONTROLLER_NAME = "ControllerName";
+        private const string ANIMATION_CONTROLLER = "animationController";
+        private const string RANDOM_WEIGHTS = "randomWeights";
+        private const string IS_CLOSE = "isClose";
+        private const string ANIMATION_NAMES = "animationNames";
 
-        private bool isSetup;
-        private bool isAdd;
+        private const string WEIGHT_CONTROLLER = "weightController";
+        private const string CIRCLE_CONTROLLER = "circleController";
+        private const string RANDOM_CONTROLLER = "randomController";
 
-        private void Update() {
-            if (Input.GetKeyDown(setupKey)) {
-                isSetup = true;
+        private const string INITIAL_WEIGHT = "initialWeight";
+
+
+        public Option<InputData> LoadInputData(string text) {
+            Result<JSONType, JSONError> typeRes = VJP.Parse(text, 1024);
+
+            if (typeRes.IsErr()) {
+                JSONError error = typeRes.AsErr();
+                Debug.LogError(error.type);
+                return Option<InputData>.None();
             }
 
-            if (Input.GetKeyDown(addKey)) {
-                isAdd = true;
+            JSONType type = typeRes.AsOk();
+
+            if (type.Obj.IsNone()) {
+                Debug.LogError("JSON file is Empty");
+                return Option<InputData>.None();
             }
 
-            if (isSetup || isAdd) {
-                if (jsonFile == null) {
-                    Debug.LogError("There is no jsonFile");
-                    return;
-                }
+            var obj = type.Obj.Peel();
 
-                Result<JSONType, JSONError> typeRes = VJP.Parse(jsonFile.text, 1024);
-
-                if (typeRes.IsErr()) {
-                    JSONError error = typeRes.AsErr();
-                    Debug.LogError(error.type);
-                    return;
-                }
-
-                JSONType type = typeRes.AsOk();
-
-                if (type.Obj.IsNone()) {
-                    Debug.LogError("JSON file is Empty");
-                    return;
-                }
-
-                var obj = type.Obj.Peel();
-
-                if (!obj.ContainsKey(INPUT_DATA)) {
-                    Debug.LogError("No Input Data field");
-                    return;
-                }
-
-                JSONType json = obj[INPUT_DATA];
-                Option<InputData> optionInputData = LoadInputDataFromJSON(json);
-
-                if (optionInputData.IsNone()) {
-                    Debug.LogError("Incorrect input data");
-                    return;
-                }
-
-                var inputData = optionInputData.Peel();
-                var commands = inputData.commands;
-
-                if (isSetup) {
-                    playablesAnimator.Setup(commands);
-                    isSetup = false;
-
-                } else {
-                    playablesAnimator.AddNewCommands(commands);
-                    isAdd = false;
-                }
+            if (!obj.ContainsKey(INPUT_DATA)) {
+                Debug.LogError("No Input Data field");
+                return Option<InputData>.None();
             }
+
+            JSONType json = obj[INPUT_DATA];
+            Option<InputData> optionInputData = GetInputDataFromJson(json);
+
+            if (optionInputData.IsNone()) {
+                Debug.LogError("Incorrect input data");
+                return Option<InputData>.None();
+            }
+
+            return optionInputData;
+
         }
 
-        public Option<InputData> LoadInputDataFromJSON(JSONType json) {
+        public Option<InputData> GetInputDataFromJson(JSONType json) {
             InputData inputData = new InputData {
                 commands = new List<Command>()
             };
@@ -219,8 +193,8 @@ namespace animator {
                 return null;
             }
 
-            animationOutput.Name = outputDict[NAME].Str.Peel();
-            addOutputCommand.AnimationOutput = animationOutput;
+            animationOutput.name = outputDict[NAME].Str.Peel();
+            addOutputCommand.animationOutput = animationOutput;
 
             return addOutputCommand;
         }
@@ -228,72 +202,136 @@ namespace animator {
         private AddControllerCommand? GetController(Dictionary<string, JSONType> addController) {
             var addControllerCommand = new AddControllerCommand();
 
-            if (!addController.ContainsKey(CONTROLLER)) {
-                Debug.LogError("No Controller field");
+            if (!addController.ContainsKey(ANIMATION_CONTROLLER)) {
+                Debug.LogError("No animationController field");
                 return null;
             }
 
-            if (addController[CONTROLLER].Obj.IsNone()) {
-                Debug.LogError("Controller field is empty");
+            if (addController[ANIMATION_CONTROLLER].Obj.IsNone()) {
+                Debug.LogError("animationController field is empty");
                 return null;
             }
 
-            var controllerDict = addController[CONTROLLER].Obj.Peel();
-            var animationController = new AnimationControllerInput();
-
-            if (!controllerDict.ContainsKey(CONTROLLER_TYPE)) {
-                Debug.LogError("No ControllerType field");
-                return null;
-            }
-
-            if (controllerDict[CONTROLLER_TYPE].Str.IsNone()) {
-                Debug.LogError("ControllerType field is empty");
-                return null;
-            }
-
-            animationController.ControllerType = controllerDict[CONTROLLER_TYPE].Str.Peel();
+            var controllerDict = addController[ANIMATION_CONTROLLER].Obj.Peel();
+            var animationController = new AnimationController();
 
             if (!controllerDict.ContainsKey(NAME)) {
-                Debug.LogError("No ControllerType field");
+                Debug.LogError("No name field");
                 return null;
             }
 
             if (controllerDict[NAME].Str.IsNone()) {
-                Debug.LogError("ControllerType field is empty");
+                Debug.LogError("name field is empty");
+                return null;
+            }
+            animationController.name = controllerDict[NAME].Str.Peel();
+
+
+            if (!controllerDict.ContainsKey(WEIGHT_CONTROLLER)) {
+                Debug.LogError("No weightController field");
                 return null;
             }
 
-            animationController.Name = controllerDict[NAME].Str.Peel();
-
-            List<int> weights = new List<int>();
-
-            if (controllerDict.ContainsKey(RANDOM_WEIGHTS)) {
-                if (controllerDict[RANDOM_WEIGHTS].Arr.IsSome()) {
-
-                    List<JSONType> weightList = controllerDict[RANDOM_WEIGHTS].Arr.Peel();
-
-                    foreach (var weight in weightList) {
-
-                        if (weight.Num.IsNone()) {
-                            Debug.LogError("Weight is not a number");
-                            weights.Add(0);
-                            continue;
-                        }
-
-                        if (!int.TryParse(weight.Num.Peel(), out int num)) {
-                            Debug.LogError("Weight is not a number");
-                            weights.Add(0);
-                            continue;
-                        }
-
-                        weights.Add(num);
-                    }
-                }
+            if (controllerDict[WEIGHT_CONTROLLER].Obj.IsNone()) {
+                Debug.LogError("weightController field is empty");
+                return null;
             }
 
-            animationController.RandomWeights = weights;
+            var weightControllerDict = controllerDict[WEIGHT_CONTROLLER].Obj.Peel();
+            var weightController = new WeightController();
 
-            addControllerCommand.ControllerInput = animationController;
+            if (!weightControllerDict.ContainsKey(ANIMATION_NAMES)) {
+                Debug.LogError("No animation names field");
+                return null;
+            }
+            if (weightControllerDict[ANIMATION_NAMES].Arr.IsNone()) {
+                Debug.LogError("animation names field is empty");
+                return null;
+            }
+            List<string> animationNames = new List<string>();
+            List<JSONType> names = weightControllerDict[ANIMATION_NAMES].Arr.Peel();
+            foreach (var name in names) {
+                if (name.Str.IsNone()) {
+                    Debug.LogError("Wrong Name");
+                    continue;
+                }
+                animationNames.Add(name.Str.Peel());
+            }
+            weightController.animationNames = animationNames;
+
+            if (weightControllerDict.ContainsKey(CIRCLE_CONTROLLER)) {
+                if (weightControllerDict[CIRCLE_CONTROLLER].Obj.IsNone()) {
+                    Debug.LogError("circle controller field is empty");
+                    return null;
+                }
+                var circleControllerDict = weightControllerDict[CIRCLE_CONTROLLER].Obj.Peel();
+                var circleController = new CircleController();
+
+                if (!circleControllerDict.ContainsKey(IS_CLOSE)) {
+                    Debug.LogError("No isClose field");
+                    return null;
+                }
+
+                if (circleControllerDict[IS_CLOSE].Bool.IsNone()) {
+                    Debug.LogError("isClose field is empty");
+                    return null;
+                }
+
+                circleController.isClose = circleControllerDict[IS_CLOSE].Bool.Peel();
+                weightController.circleController = circleController;
+
+
+            } else if (weightControllerDict.ContainsKey(RANDOM_CONTROLLER)) {
+                if (weightControllerDict[RANDOM_CONTROLLER].Obj.IsNone()) {
+                    Debug.LogError("random controller field is empty");
+                    return null;
+                }
+                var randomControllerDict = weightControllerDict[RANDOM_CONTROLLER].Obj.Peel();
+                var randomController = new RandomController();
+
+                if (!randomControllerDict.ContainsKey(RANDOM_WEIGHTS)) {
+                    Debug.LogError("No random weights field");
+                    return null;
+                }
+
+                if (randomControllerDict[RANDOM_WEIGHTS].Arr.IsNone()) {
+                    Debug.LogError("random weights field is empty");
+                    return null;
+                }
+
+
+
+                List<int> weights = new List<int>();
+                List<JSONType> weightList = randomControllerDict[RANDOM_WEIGHTS].Arr.Peel();
+
+
+                foreach (var weight in weightList) {
+
+                    if (weight.Num.IsNone()) {
+                        Debug.LogError("Weight is not a number");
+                        weights.Add(0);
+                        continue;
+                    }
+
+                    if (!int.TryParse(weight.Num.Peel(), out int num)) {
+                        Debug.LogError("Weight is not a number");
+                        weights.Add(0);
+                        continue;
+                    }
+
+                    weights.Add(num);
+                }
+
+                randomController.randomWeights = weights;
+                weightController.randomController = randomController;
+
+            } else {
+                Debug.LogError("No controller in Weight controller");
+            }
+
+
+            animationController.weightController = weightController;
+            addControllerCommand.animationController = animationController;
 
             return addControllerCommand;
         }
@@ -324,7 +362,7 @@ namespace animator {
                 return null;
             }
 
-            animationInput.Parent = animInputDict[PARENT].Str.Peel();
+            animationInput.parent = animInputDict[PARENT].Str.Peel();
 
             if (!animInputDict.ContainsKey(NAME)) {
                 Debug.LogError("No Parent field");
@@ -336,7 +374,29 @@ namespace animator {
                 return null;
             }
 
-            animationInput.Name = animInputDict[NAME].Str.Peel();
+            animationInput.name = animInputDict[NAME].Str.Peel();
+
+            if (!animInputDict.ContainsKey(INITIAL_WEIGHT)) {
+                Debug.LogError("No initialWeight field");
+                return null;
+            }
+
+            if (animInputDict[INITIAL_WEIGHT].Num.IsNone()) {
+                Debug.LogError("initialWeight field is empty ");
+                return null;
+            }
+
+            string tempInitWeight = animInputDict[INITIAL_WEIGHT].Num.Peel();
+            CultureInfo ci = CultureInfo.InvariantCulture;
+
+            if (!float.TryParse(tempInitWeight, NumberStyles.Any, ci, out float initWeight)) {
+                Debug.LogError("Animation Transition Duration isn't number");
+                return null;
+            }
+
+            animationInput.initialWeight = initWeight;
+
+
 
             if (animInputDict.ContainsKey(ANIMATION_CLIP)) {
 
@@ -359,49 +419,40 @@ namespace animator {
                 }
 
                 string tempDuration = animClip[TRANSITION_DURATION].Num.Peel();
-                CultureInfo ci = CultureInfo.InvariantCulture;
 
                 if (!float.TryParse(tempDuration, NumberStyles.Any, ci, out float duration)) {
                     Debug.LogError("Animation Transition Duration isn't number");
                     return null;
                 }
 
-                if (animClip.ContainsKey(CONTROLLER_NAME)) {
-                    if (animClip[CONTROLLER_NAME].Str.IsSome()) {
-                        animationClipInput.ControllerName = animClip[CONTROLLER_NAME].Str.Peel();
-                    }
-                }
 
-                if (animClip.ContainsKey(MASK_NAME)) {
-                    if (animClip[MASK_NAME].Str.IsSome()) {
-                        var maskName = animClip[MASK_NAME].Str.Peel();
-                        animationClipInput.MaskName = maskName;
-                    }
+                if (!animClip.ContainsKey(CLIP_NAME)) {
+                    Debug.LogError("No Clip Name field");
+                    return null;
                 }
-
-                if (animClip.ContainsKey(IS_ADDITIVE)) {
-                    if (animClip[IS_ADDITIVE].Bool.IsSome()) {
-                        var isAdditive = animClip[IS_ADDITIVE].Bool.Peel();
-                        animationClipInput.IsAdditive = isAdditive;
-                    }
+                if (animClip[CLIP_NAME].Str.IsNone()) {
+                    Debug.LogError("Clip Name field is empty");
+                    return null;
                 }
+                var clipName = animClip[CLIP_NAME].Str.Peel();
 
-                animationClipInput.TransitionDuration = duration;
-                animationInput.AnimationClip = animationClipInput;
-                animInput.AnimationInput = animationInput;
+                animationClipInput.transitionDuration = duration;
+                animationClipInput.clipName = clipName;
+                animationInput.animationClip = animationClipInput;
+                animInput.animationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_MIXER)) {
 
                 var animationMixerInput = new AnimationMixerInput();
-                animationInput.AnimationMixer = animationMixerInput;
-                animInput.AnimationInput = animationInput;
+                animationInput.animationMixer = animationMixerInput;
+                animInput.animationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_LAYER_MIXER)) {
 
                 var animationMixerLayerInput = new AnimationLayerMixerInput();
 
-                animationInput.AnimationLayerMixer = animationMixerLayerInput;
-                animInput.AnimationInput = animationInput;
+                animationInput.animationLayerMixer = animationMixerLayerInput;
+                animInput.animationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_JOB)) {
 
@@ -414,13 +465,13 @@ namespace animator {
                 var animationJobInput = new AnimationJobInput();
 
                 if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
-                    animationJobInput.LookAtJob = new LookAtJobInput();
+                    animationJobInput.lookAtJob = new LookAtJobInput();
 
                 } else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
-                    animationJobInput.TwoBoneIKJob = new TwoBoneIKJobInput();
+                    animationJobInput.twoBoneIKJob = new TwoBoneIKJobInput();
 
                 } else if (animationJobDict.ContainsKey(DAMPING_JOB)) {
-                    animationJobInput.DampingJob = new DampingJobInput();
+                    animationJobInput.dampingJob = new DampingJobInput();
 
                 } else {
                     Debug.LogError("Unknown job");
@@ -428,13 +479,13 @@ namespace animator {
 
                 }
 
-                animationInput.AnimationJob = animationJobInput;
-                animInput.AnimationInput = animationInput;
+                animationInput.animationJob = animationJobInput;
+                animInput.animationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_BRAIN)) {
                 var animationBrainInput = new AnimationBrainInput();
-                animationInput.AnimationBrain = animationBrainInput;
-                animInput.AnimationInput = animationInput;
+                animationInput.animationBrain = animationBrainInput;
+                animInput.animationInput = animationInput;
 
             } else {
                 Debug.LogError("Unknown AnimationInput");
