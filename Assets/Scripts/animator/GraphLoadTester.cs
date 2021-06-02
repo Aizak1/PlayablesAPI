@@ -39,7 +39,7 @@ namespace animator {
                     return;
                 }
                 var inputData = optionInputData.Peel();
-                var commands = inputData.commands;
+                var commands = inputData.Commands;
                 if (isSetup) {
 
                     playablesAnimator.Setup(commands);

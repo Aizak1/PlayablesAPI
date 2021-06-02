@@ -1,16 +1,16 @@
 {
     "InputData":{
-        "commands":[
+        "Commands":[
             {
                 "AddOutput":{
-                    "animationOutput":{
+                    "AnimationOutput":{
                         "name":"main"
                     }
                 }
             },{
                 "AddInput":{
-                    "animationInput":{
-                        "animationBrain":{
+                    "AnimationInput":{
+                        "AnimationBrain":{
                         },
                         "name":"brain",
                         "parent":"main",
@@ -19,8 +19,8 @@
                 }
             },{
                 "AddInput":{
-                    "animationInput":{
-                        "animationMixer":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
                         },
                         "name":"mixer1",
                         "parent":"brain",
@@ -29,8 +29,8 @@
                 }
             },{
                 "AddInput":{
-                    "animationInput":{
-                        "animationClip":{
+                    "AnimationInput":{
+                        "AnimationClip":{
                             "transitionDuration":0.5,
                             "clipName": "Clapping"
                         },
@@ -41,8 +41,8 @@
                 }
             },{
                 "AddInput":{
-                    "animationInput":{
-                        "animationClip":{
+                    "AnimationInput":{
+                        "AnimationClip":{
                             "transitionDuration":0.5,
                             "clipName": "Flair"
                         },
@@ -53,8 +53,8 @@
                 }
             },{
                 "AddInput":{
-                    "animationInput":{
-                        "animationClip":{
+                    "AnimationInput":{
+                        "AnimationClip":{
                             "transitionDuration":0.5,
                             "clipName": "Silly Dancing"
                         },
@@ -65,15 +65,20 @@
                 }
             },{
                 "AddController":{
-                    "animationController":{
+                    "AnimationController":{
                         "name": "close",
-                        "weightController":{
-                            "circleController":{
+                        "WeightController":{
+                            "CircleController":{
                                 "isClose": true
                             },
                             "animationNames":["anim3", "anim2", "anim1"]
                         }
                     }
+                }
+            },{
+                "ChangeControllersState":{
+                    "EnableControllers":{},
+                    "controllerNames":["close"]
                 }
             }
         ]

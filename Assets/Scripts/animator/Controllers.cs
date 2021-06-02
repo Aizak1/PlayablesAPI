@@ -8,12 +8,12 @@ namespace animator {
 
     public struct AnimationController {
         public string name;
-        public WeightController? weightController;
+        public WeightController? WeightController;
     }
 
     public struct WeightController {
-        public CircleController? circleController;
-        public RandomController? randomController;
+        public CircleController? CircleController;
+        public RandomController? RandomController;
 
         public List<string> animationNames;
     }
@@ -29,11 +29,17 @@ namespace animator {
     public struct WeightControllerExecutor : IController {
         public IAdditionalController additionalControllerExecuter;
         public List<ClipNode> animationNodes;
+        private bool isEnabled;
 
         private int currentAnimationIndex;
         private int nextAnimationIndex;
 
         public void ProcessLogic(Playable owner, FrameData info) {
+
+            if (!isEnabled) {
+                return;
+            }
+
             if (nextAnimationIndex == currentAnimationIndex && animationNodes.Count != 1) {
 
                 var nodes = animationNodes;
@@ -58,13 +64,13 @@ namespace animator {
 
                 currentAnimationIndex = nextAnimationIndex;
                 current = animationNodes[currentAnimationIndex];
-                current.PlayableClip.SetTime(0);
+                current.playableClip.SetTime(0);
             }
         }
 
         private bool IsEndOfTransition(ClipNode current) {
-            float length = current.AnimationLength;
-            float currentClipTime = (float)current.PlayableClip.GetTime();
+            float length = current.animationLength;
+            float currentClipTime = (float)current.playableClip.GetTime();
 
             if (currentClipTime >= length) {
                 return true;
@@ -74,10 +80,10 @@ namespace animator {
         }
 
         private void MakeTransition(ClipNode current, ClipNode next) {
-            float length = current.AnimationLength;
-            float duration = current.TransitionDuration;
+            float length = current.animationLength;
+            float duration = current.transitionDuration;
             float startTransitionTime = length - duration;
-            float currentClipTime = (float)current.PlayableClip.GetTime();
+            float currentClipTime = (float)current.playableClip.GetTime();
 
             float transitionTime = currentClipTime - startTransitionTime;
             float weight = transitionTime / duration;
@@ -87,19 +93,19 @@ namespace animator {
 
         private void SpreadWeight(float weight, ClipNode current, ClipNode next) {
 
-            if (current.Parent.inputParent.IsNull()) {
+            if (!current.parent.input.HasValue) {
                 return;
             }
 
-            current.Parent.inputParent.SetInputWeight(current.PlayableClip, 1 - weight);
-            next.Parent.inputParent.SetInputWeight(next.PlayableClip, weight);
+            current.parent.input.Value.SetInputWeight(current.playableClip, 1 - weight);
+            next.parent.input.Value.SetInputWeight(next.playableClip, weight);
         }
 
         public bool IsTimeToMakeTransition(ClipNode current) {
-            float length = current.AnimationLength;
-            float duration = current.TransitionDuration;
+            float length = current.animationLength;
+            float duration = current.transitionDuration;
             float startTransitionTime = length - duration;
-            float currentClipTime = (float)current.PlayableClip.GetTime();
+            float currentClipTime = (float)current.playableClip.GetTime();
 
             if (currentClipTime >= startTransitionTime) {
                 return true;
@@ -107,7 +113,18 @@ namespace animator {
 
             return false;
         }
+
+        public void Enable() {
+            isEnabled = true;
+            animationNodes[0].playableClip.SetTime(0);
+        }
+
+        public void Disable() {
+            isEnabled = false;
+        }
     }
+
+
 
     public struct CircleControllerExecutor : IAdditionalController {
         public bool isClose;

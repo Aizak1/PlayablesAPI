@@ -9,50 +9,57 @@ namespace animator {
 
     [System.Serializable]
     public struct InputData {
-        public List<Command> commands;
+        public List<Command> Commands;
     }
 
     public class AnimatorDataParser : MonoBehaviour {
 
 
         private const string INPUT_DATA = "InputData";
-        private const string COMMANDS = "commands";
+        private const string COMMANDS = "Commands";
 
         private const string ADD_INPUT = "AddInput";
         private const string ADD_CONTROLLER = "AddController";
         private const string ADD_OUTPUT = "AddOutput";
+        private const string CHANGE_CONTROLLERS_STATE = "ChangeControllersState";
+        private const string CHANGE_WEIGHT = "ChangeWeight";
+        private const string SET_LAYER_MASK = "SetLayerMask";
 
         private const string PARENT = "parent";
         private const string NAME = "name";
 
-        private const string ANIMATION_CLIP = "animationClip";
+        private const string ANIMATION_CLIP = "AnimationClip";
         private const string CLIP_NAME = "clipName";
         private const string MASK_NAME = "maskName";
         private const string TRANSITION_DURATION = "transitionDuration";
         private const string IS_ADDITIVE = "isAdditive";
 
-        private const string ANIMATION_INPUT = "animationInput";
-        private const string ANIMATION_OUTPUT = "animationOutput";
-        private const string ANIMATION_MIXER = "animationMixer";
-        private const string ANIMATION_LAYER_MIXER = "animationLayerMixer";
-        private const string ANIMATION_BRAIN = "animationBrain";
+        private const string ANIMATION_INPUT = "AnimationInput";
+        private const string ANIMATION_OUTPUT = "AnimationOutput";
+        private const string ANIMATION_MIXER = "AnimationMixer";
+        private const string ANIMATION_LAYER_MIXER = "AnimationLayerMixer";
+        private const string ANIMATION_BRAIN = "AnimationBrain";
 
-        private const string ANIMATION_JOB = "animationJob";
-        private const string LOOK_AT_JOB = "lookAtJob";
-        private const string TWOBONE_IK_JOB = "twoBoneIKJob";
-        private const string DAMPING_JOB = "dampingJob";
+        private const string ANIMATION_JOB = "AnimationJob";
+        private const string LOOK_AT_JOB = "LookAtJob";
+        private const string TWOBONE_IK_JOB = "TwoBoneIKJob";
+        private const string DAMPING_JOB = "DampingJob";
 
-        private const string ANIMATION_CONTROLLER = "animationController";
+        private const string ANIMATION_CONTROLLER = "AnimationController";
         private const string RANDOM_WEIGHTS = "randomWeights";
         private const string IS_CLOSE = "isClose";
         private const string ANIMATION_NAMES = "animationNames";
 
-        private const string WEIGHT_CONTROLLER = "weightController";
-        private const string CIRCLE_CONTROLLER = "circleController";
-        private const string RANDOM_CONTROLLER = "randomController";
+        private const string WEIGHT_CONTROLLER = "WeightController";
+        private const string CIRCLE_CONTROLLER = "CircleController";
+        private const string RANDOM_CONTROLLER = "RandomController";
 
         private const string INITIAL_WEIGHT = "initialWeight";
+        private const string WEIGHT = "weight";
 
+        private const string ENABLE_CONTROLLERS = "EnableControllers";
+        private const string DISABLE_CONTROLLERS = "DisableControllers";
+        private const string CONTROLLER_NAMES = "controllerNames";
 
         public Option<InputData> LoadInputData(string text) {
             Result<JSONType, JSONError> typeRes = VJP.Parse(text, 1024);
@@ -91,7 +98,7 @@ namespace animator {
 
         public Option<InputData> GetInputDataFromJson(JSONType json) {
             InputData inputData = new InputData {
-                commands = new List<Command>()
+                Commands = new List<Command>()
             };
 
             if (json.Obj.IsNone()) {
@@ -121,7 +128,7 @@ namespace animator {
                 }
 
                 Command command = GetCommand(item.Obj.Peel());
-                inputData.commands.Add(command);
+                inputData.Commands.Add(command);
             }
 
             return Option<InputData>.Some(inputData);
@@ -159,6 +166,36 @@ namespace animator {
                 var dict = inputCommand[ADD_OUTPUT].Obj.Peel();
                 command.AddOutput = GetOutput(dict);
 
+            } else if (inputCommand.ContainsKey(CHANGE_CONTROLLERS_STATE)) {
+
+                if (inputCommand[CHANGE_CONTROLLERS_STATE].Obj.IsNone()) {
+                    Debug.LogError("AddController field is empty");
+                    return command;
+                }
+
+                var dict = inputCommand[CHANGE_CONTROLLERS_STATE].Obj.Peel();
+                command.ChangeControllersState = GetControllersStateCommand(dict);
+
+            } else if (inputCommand.ContainsKey(CHANGE_WEIGHT)) {
+
+                if (inputCommand[CHANGE_WEIGHT].Obj.IsNone()) {
+                    Debug.LogError("AddController field is empty");
+                    return command;
+                }
+
+                var dict = inputCommand[CHANGE_WEIGHT].Obj.Peel();
+                command.ChangeWeight = GetChangeWeightCommand(dict);
+
+            } else if (inputCommand.ContainsKey(SET_LAYER_MASK)) {
+
+                if (inputCommand[SET_LAYER_MASK].Obj.IsNone()) {
+                    Debug.LogError("AddController field is empty");
+                    return command;
+                }
+
+                var dict = inputCommand[SET_LAYER_MASK].Obj.Peel();
+                command.SetLayerMask = GetSetLayerMaskCommand(dict);
+
             } else {
                 Debug.LogError("Unknown Add command field");
             }
@@ -194,7 +231,7 @@ namespace animator {
             }
 
             animationOutput.name = outputDict[NAME].Str.Peel();
-            addOutputCommand.animationOutput = animationOutput;
+            addOutputCommand.AnimationOutput = animationOutput;
 
             return addOutputCommand;
         }
@@ -278,7 +315,7 @@ namespace animator {
                 }
 
                 circleController.isClose = circleControllerDict[IS_CLOSE].Bool.Peel();
-                weightController.circleController = circleController;
+                weightController.CircleController = circleController;
 
 
             } else if (weightControllerDict.ContainsKey(RANDOM_CONTROLLER)) {
@@ -323,15 +360,15 @@ namespace animator {
                 }
 
                 randomController.randomWeights = weights;
-                weightController.randomController = randomController;
+                weightController.RandomController = randomController;
 
             } else {
                 Debug.LogError("No controller in Weight controller");
             }
 
 
-            animationController.weightController = weightController;
-            addControllerCommand.animationController = animationController;
+            animationController.WeightController = weightController;
+            addControllerCommand.AnimationController = animationController;
 
             return addControllerCommand;
         }
@@ -438,21 +475,21 @@ namespace animator {
 
                 animationClipInput.transitionDuration = duration;
                 animationClipInput.clipName = clipName;
-                animationInput.animationClip = animationClipInput;
-                animInput.animationInput = animationInput;
+                animationInput.AnimationClip = animationClipInput;
+                animInput.AnimationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_MIXER)) {
 
                 var animationMixerInput = new AnimationMixerInput();
-                animationInput.animationMixer = animationMixerInput;
-                animInput.animationInput = animationInput;
+                animationInput.AnimationMixer = animationMixerInput;
+                animInput.AnimationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_LAYER_MIXER)) {
 
                 var animationMixerLayerInput = new AnimationLayerMixerInput();
 
-                animationInput.animationLayerMixer = animationMixerLayerInput;
-                animInput.animationInput = animationInput;
+                animationInput.AnimationLayerMixer = animationMixerLayerInput;
+                animInput.AnimationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_JOB)) {
 
@@ -465,13 +502,13 @@ namespace animator {
                 var animationJobInput = new AnimationJobInput();
 
                 if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
-                    animationJobInput.lookAtJob = new LookAtJobInput();
+                    animationJobInput.LookAtJob = new LookAtJobInput();
 
                 } else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
-                    animationJobInput.twoBoneIKJob = new TwoBoneIKJobInput();
+                    animationJobInput.TwoBoneIKJob = new TwoBoneIKJobInput();
 
                 } else if (animationJobDict.ContainsKey(DAMPING_JOB)) {
-                    animationJobInput.dampingJob = new DampingJobInput();
+                    animationJobInput.DampingJob = new DampingJobInput();
 
                 } else {
                     Debug.LogError("Unknown job");
@@ -479,13 +516,13 @@ namespace animator {
 
                 }
 
-                animationInput.animationJob = animationJobInput;
-                animInput.animationInput = animationInput;
+                animationInput.AnimationJob = animationJobInput;
+                animInput.AnimationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_BRAIN)) {
                 var animationBrainInput = new AnimationBrainInput();
-                animationInput.animationBrain = animationBrainInput;
-                animInput.animationInput = animationInput;
+                animationInput.AnimationBrain = animationBrainInput;
+                animInput.AnimationInput = animationInput;
 
             } else {
                 Debug.LogError("Unknown AnimationInput");
@@ -494,6 +531,152 @@ namespace animator {
 
 
             return animInput;
+        }
+
+        private ChangeControllersStateCommand? GetControllersStateCommand(
+            Dictionary<string, JSONType> controllerStateCommandDict
+            ) {
+
+            var controllersStateCommand = new ChangeControllersStateCommand();
+
+            if (!controllerStateCommandDict.ContainsKey(CONTROLLER_NAMES)) {
+                Debug.LogError("No animationNames field");
+                return null;
+            }
+
+            if (controllerStateCommandDict[CONTROLLER_NAMES].Arr.IsNone()) {
+                Debug.LogError("animationNames field is empty");
+                return null;
+            }
+
+            List<string> names = new List<string>();
+            foreach (var name in controllerStateCommandDict[CONTROLLER_NAMES].Arr.Peel()) {
+                if (name.Str.IsNone()) {
+                    Debug.LogError("Wrong Name");
+                    continue;
+                }
+                names.Add(name.Str.Peel());
+            }
+            controllersStateCommand.controllerNames = names;
+
+
+            if (controllerStateCommandDict.ContainsKey(ENABLE_CONTROLLERS)) {
+                var enableContollersCommand = new EnableControllersCommand();
+                controllersStateCommand.EnableControllers = enableContollersCommand;
+
+            } else if (controllerStateCommandDict.ContainsKey(DISABLE_CONTROLLERS)) {
+                var disableControllerCommand = new DisableControllersCommand();
+                controllersStateCommand.DisableControllers = disableControllerCommand;
+            } else {
+                Debug.LogError("Unknown controller state command");
+                return null;
+            }
+
+            return controllersStateCommand;
+        }
+
+        private ChangeWeightCommand? GetChangeWeightCommand(
+           Dictionary<string, JSONType> changeWeightDict
+           ) {
+
+            var changeWeightCommand = new ChangeWeightCommand();
+
+            if (!changeWeightDict.ContainsKey(NAME)) {
+                Debug.LogError("No name field");
+                return null;
+            }
+
+            if (changeWeightDict[NAME].Str.IsNone()) {
+                Debug.LogError("name field is empty");
+                return null;
+            }
+
+            if (!changeWeightDict.ContainsKey(PARENT)) {
+                Debug.LogError("No parent field");
+                return null;
+            }
+
+            if (changeWeightDict[PARENT].Str.IsNone()) {
+                Debug.LogError("parent field is empty");
+                return null;
+            }
+
+            if (!changeWeightDict.ContainsKey(WEIGHT)) {
+                Debug.LogError("No weight field");
+                return null;
+            }
+
+            if (changeWeightDict[WEIGHT].Num.IsNone()) {
+                Debug.LogError("weight field is empty");
+                return null;
+            }
+
+            string tempWeight = changeWeightDict[WEIGHT].Num.Peel();
+            CultureInfo ci = CultureInfo.InvariantCulture;
+
+
+            if (!float.TryParse(tempWeight, NumberStyles.Any, ci, out float weight)) {
+                Debug.LogError("Animation Transition Duration isn't number");
+                return null;
+            }
+
+            changeWeightCommand.name = changeWeightDict[NAME].Str.Peel();
+            changeWeightCommand.parent = changeWeightDict[PARENT].Str.Peel();
+            changeWeightCommand.weight = weight;
+
+            return changeWeightCommand;
+        }
+
+        private SetLayerMaskCommand? GetSetLayerMaskCommand(
+           Dictionary<string, JSONType> layerMaskDict
+           ) {
+
+            var layerMaskCommand = new SetLayerMaskCommand();
+
+            if (!layerMaskDict.ContainsKey(MASK_NAME)) {
+                Debug.LogError("No mask name field");
+                return null;
+            }
+
+            if (layerMaskDict[MASK_NAME].Str.IsNone()) {
+                Debug.LogError("Mask name field is empty");
+                return null;
+            }
+
+            if (!layerMaskDict.ContainsKey(IS_ADDITIVE)) {
+                Debug.LogError("No isAdditive field");
+                return null;
+            }
+
+            if (layerMaskDict[IS_ADDITIVE].Bool.IsNone()) {
+                Debug.LogError("isAdditive field is empty");
+                return null;
+            }
+
+            if (!layerMaskDict.ContainsKey(ANIMATION_NAMES)) {
+                Debug.LogError("No animationNames field");
+                return null;
+            }
+
+            if (layerMaskDict[ANIMATION_NAMES].Arr.IsNone()) {
+                Debug.LogError("animationNames field is empty");
+                return null;
+            }
+
+            List<string> names = new List<string>();
+            foreach (var name in layerMaskDict[ANIMATION_NAMES].Arr.Peel()) {
+                if (name.Str.IsNone()) {
+                    Debug.LogError("Wrong Name");
+                    continue;
+                }
+                names.Add(name.Str.Peel());
+            }
+
+            layerMaskCommand.maskName = layerMaskDict[MASK_NAME].Str.Peel();
+            layerMaskCommand.isAdditive = layerMaskDict[IS_ADDITIVE].Bool.Peel();
+            layerMaskCommand.animationNames = names;
+
+            return layerMaskCommand;
         }
     }
 }

@@ -4,11 +4,11 @@ namespace animator {
         public string parent;
         public string name;
         public float initialWeight;
-        public AnimationClipInput? animationClip;
-        public AnimationMixerInput? animationMixer;
-        public AnimationLayerMixerInput? animationLayerMixer;
-        public AnimationJobInput? animationJob;
-        public AnimationBrainInput? animationBrain;
+        public AnimationClipInput? AnimationClip;
+        public AnimationMixerInput? AnimationMixer;
+        public AnimationLayerMixerInput? AnimationLayerMixer;
+        public AnimationJobInput? AnimationJob;
+        public AnimationBrainInput? AnimationBrain;
     }
 
     public struct AnimationBrainInput {
@@ -16,9 +16,9 @@ namespace animator {
     }
 
     public struct AnimationJobInput {
-        public LookAtJobInput? lookAtJob;
-        public TwoBoneIKJobInput? twoBoneIKJob;
-        public DampingJobInput? dampingJob;
+        public LookAtJobInput? LookAtJob;
+        public TwoBoneIKJobInput? TwoBoneIKJob;
+        public DampingJobInput? DampingJob;
     }
 
     public struct DampingJobInput {

@@ -23,7 +23,7 @@ namespace animator {
         private Animator animator;
         public Brain brain;
 
-        private Dictionary<string, PlayableParent> parents;
+        private Dictionary<string, GraphNode> graphNodes;
         private Dictionary<string, ClipNode> clipNodes;
 
         public void Setup(List<Command> commands) {
@@ -36,7 +36,7 @@ namespace animator {
             graph = PlayableGraph.Create();
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
 
-            parents = new Dictionary<string, PlayableParent>();
+            graphNodes = new Dictionary<string, GraphNode>();
             clipNodes = new Dictionary<string, ClipNode>();
 
             for (int i = 0; i < commands.Count; i++) {
@@ -65,25 +65,119 @@ namespace animator {
 
             } else if (command.AddOutput.HasValue) {
                 ProcessAddOutputCommand(command);
+            } else if (command.ChangeControllersState.HasValue) {
+                ProcessChangeControllerCommand(command);
+            } else if (command.ChangeWeight.HasValue) {
+                ProcessChangeWeightCommand(command);
+            } else if (command.SetLayerMask.HasValue) {
+                ProcessSetLayerMask(command);
+            }
+        }
 
+        private void ProcessSetLayerMask(Command command) {
+            var setLayerMask = command.SetLayerMask.Value;
+            if (!resource.masks.ContainsKey(setLayerMask.maskName)) {
+                Debug.LogError("No such mask in resources");
+                return;
+            }
+            var mask = resource.masks[setLayerMask.maskName];
+            bool isAdditive = setLayerMask.isAdditive;
+            foreach (var item in setLayerMask.animationNames) {
+                if (!clipNodes.ContainsKey(item)) {
+                    Debug.LogError("No such animationName");
+                    continue;
+                }
+                var clipNode = clipNodes[item];
+                if (clipNode.parent.output.HasValue) {
+                    Debug.LogError("You need a layerMixer to set layer mask");
+                    continue;
+                }
+                var input = clipNode.parent.input.Value;
+                if (!input.IsPlayableOfType<AnimationLayerMixerPlayable>()) {
+                    Debug.LogError("You need a layerMixer to set layer mask");
+                    continue;
+                }
+
+                var layerMixer = (AnimationLayerMixerPlayable)input;
+
+                layerMixer.SetLayerMaskFromAvatarMask((uint)clipNode.portIndex, mask);
+
+                layerMixer.SetLayerAdditive((uint)clipNode.portIndex, isAdditive);
+            }
+        }
+
+        private void ProcessChangeWeightCommand(Command command) {
+            var changeWeight = command.ChangeWeight.Value;
+            if (!graphNodes.ContainsKey(changeWeight.name)) {
+                return;
+            }
+            if (!graphNodes.ContainsKey(changeWeight.parent)) {
+                return;
+            }
+
+            if(changeWeight.weight < 0 || changeWeight.weight > 1) {
+                Debug.LogError("Weight must be greater than zero and less than one");
+                return;
+            }
+
+            var node = graphNodes[changeWeight.name];
+            var parent = graphNodes[changeWeight.parent];
+
+            if (!node.input.HasValue) {
+                Debug.LogError("Incorrect input Node");
+                return;
+            }
+
+            if (!parent.input.HasValue) {
+                parent.output.Value.SetWeight(changeWeight.weight);
+            } else {
+                parent.input.Value.SetInputWeight(node.input.Value, changeWeight.weight);
+            }
+        }
+
+        private void ProcessChangeControllerCommand(Command command) {
+            var changeControllersState = command.ChangeControllersState.Value;
+            var controllerNames = changeControllersState.controllerNames;
+            if (changeControllersState.EnableControllers.HasValue) {
+                foreach (var item in controllerNames) {
+                    if (!brain.AnimControllers.ContainsKey(item)) {
+                        Debug.LogError($"No controller with name {item} ");
+                        continue;
+                    }
+                    brain.AnimControllers[item].Enable();
+                }
+
+            } else if (changeControllersState.DisableControllers.HasValue) {
+                foreach (var item in controllerNames) {
+                    if (!brain.AnimControllers.ContainsKey(item)) {
+                        Debug.LogError($"No controller with name {item} ");
+                        continue;
+                    }
+                    brain.AnimControllers[item].Disable();
+                }
             }
         }
 
         private void ProcessAddInputCommand(Command command) {
             AddInputCommand inputCommand = command.AddInput.Value;
-            var animationInput = inputCommand.animationInput;
+            var animationInput = inputCommand.AnimationInput;
 
-            if (!parents.ContainsKey(animationInput.parent)) {
+            if (!graphNodes.ContainsKey(animationInput.parent)) {
                 Debug.LogError($"Invalid parent name: {animationInput.parent}");
                 return;
             }
 
-            PlayableParent parent = parents[animationInput.parent];
+            GraphNode parent = graphNodes[animationInput.parent];
             string name = animationInput.name;
             float initialWeight = animationInput.initialWeight;
 
-            if (animationInput.animationClip.HasValue) {
-                string clipName = animationInput.animationClip.Value.clipName;
+            if (initialWeight < 0 || initialWeight > 1) {
+                Debug.LogError("Weight must be greater than zero and less than one");
+                return;
+            }
+
+            if (animationInput.AnimationClip.HasValue) {
+                string clipName = animationInput.AnimationClip.Value.clipName;
                 if (clipNodes.ContainsKey(name)) {
                     Debug.LogError($"Animation {name} is already exists");
                     return;
@@ -94,7 +188,7 @@ namespace animator {
                 }
 
                 AnimationClip clip = resource.animations[clipName];
-                float duration = animationInput.animationClip.Value.transitionDuration;
+                float duration = animationInput.AnimationClip.Value.transitionDuration;
                 float length = clip.length;
 
                 if (length < duration) {
@@ -104,63 +198,76 @@ namespace animator {
 
                 AnimationClipPlayable animation = AnimationClipPlayable.Create(graph, clip);
                 ConnectNodeToParent(parent, animation, initialWeight);
+                parent.inputCount++;
+                graphNodes[animationInput.parent] = parent;
 
                 var newAnimation = new ClipNode {
-                    Parent = parent,
-                    PlayableClip = animation,
-                    TransitionDuration = duration,
-                    AnimationLength = length
+                    parent = parent,
+                    playableClip = animation,
+                    transitionDuration = duration,
+                    animationLength = length,
+                    portIndex = parent.inputCount - 1
                 };
 
                 if (brain == null) {
                     return;
                 }
-                newAnimation.PlayableClip.SetTime(length);
+                newAnimation.playableClip.SetTime(length);
                 clipNodes.Add(name, newAnimation);
 
-            } else if (animationInput.animationMixer.HasValue) {
+                var graphNode = new GraphNode() {
+                    input = animation
+                };
+                graphNodes.Add(name, graphNode);
 
-                if (parents.ContainsKey(name)) {
+
+            } else if (animationInput.AnimationMixer.HasValue) {
+
+                if (graphNodes.ContainsKey(name)) {
                     Debug.LogError($"Mixer with name {name} is already exists");
                     return;
                 }
 
                 Playable playable = AnimationMixerPlayable.Create(graph);
 
-                var playableParent = new PlayableParent {
-                    inputParent = playable
+                var playableParent = new GraphNode {
+                    input = playable
                 };
 
-                parents.Add(name, playableParent);
+                graphNodes.Add(name, playableParent);
 
                 ConnectNodeToParent(parent, playable, initialWeight);
+                parent.inputCount++;
+                graphNodes[animationInput.parent] = parent;
 
-            } else if (animationInput.animationLayerMixer.HasValue) {
-                if (parents.ContainsKey(name)) {
+            } else if (animationInput.AnimationLayerMixer.HasValue) {
+                if (graphNodes.ContainsKey(name)) {
                     Debug.LogError($"Layer Mixer with name {name} is already exists");
                     return;
                 }
 
                 var playable = AnimationLayerMixerPlayable.Create(graph);
 
-                var playableParent = new PlayableParent {
-                    inputParent = playable
+                var playableParent = new GraphNode {
+                    input = playable
                 };
 
-                parents.Add(name, playableParent);
+                graphNodes.Add(name, playableParent);
 
                 ConnectNodeToParent(parent, playable, initialWeight);
+                parent.inputCount++;
+                graphNodes[animationInput.parent] = parent;
 
-            } else if (animationInput.animationJob.HasValue) {
+            } else if (animationInput.AnimationJob.HasValue) {
 
-                if (parents.ContainsKey(name)) {
+                if (graphNodes.ContainsKey(name)) {
                     Debug.LogError($"Job with name {name} is already exists");
                     return;
                 }
 
-                var job = animationInput.animationJob.Value;
+                var job = animationInput.AnimationJob.Value;
 
-                if (job.lookAtJob.HasValue) {
+                if (job.LookAtJob.HasValue) {
 
                     animator.fireEvents = false;
                     var lookAtSettings = jobsSettings.LookAtSettings;
@@ -177,15 +284,17 @@ namespace animator {
 
                     Playable lookAt = AnimationScriptPlayable.Create(graph, lookAtJob);
 
-                    var playableParent = new PlayableParent {
-                        inputParent = lookAt
+                    var playableParent = new GraphNode {
+                        input = lookAt
                     };
 
-                    parents.Add(name, playableParent);
+                    graphNodes.Add(name, playableParent);
 
                     ConnectNodeToParent(parent, lookAt, initialWeight);
+                    parent.inputCount++;
+                    graphNodes[animationInput.parent] = parent;
 
-                } else if (job.twoBoneIKJob.HasValue) {
+                } else if (job.TwoBoneIKJob.HasValue) {
 
                     var endJoint = jobsSettings.TwoBoneIKSettings.EndJoint;
                     var effector = jobsSettings.TwoBoneIKSettings.EffectorModel;
@@ -199,15 +308,17 @@ namespace animator {
 
                     Playable twoBone = AnimationScriptPlayable.Create(graph, twoBoneIKJob);
 
-                    var playableParent = new PlayableParent {
-                        inputParent = twoBone
+                    var playableParent = new GraphNode {
+                        input = twoBone
                     };
 
-                    parents.Add(name, playableParent);
+                    graphNodes.Add(name, playableParent);
 
                     ConnectNodeToParent(parent, twoBone, initialWeight);
+                    parent.inputCount++;
+                    graphNodes[animationInput.parent] = parent;
 
-                } else if (job.dampingJob.HasValue) {
+                } else if (job.DampingJob.HasValue) {
 
                     var joints = jobsSettings.DampingJobSettings.Joints;
                     var numJoints = joints.Length;
@@ -262,19 +373,21 @@ namespace animator {
 
                     dampingJobsData.Add(dampingJobData);
 
-                    var playableParent = new PlayableParent {
-                        inputParent = dampingPlayable
+                    var playableParent = new GraphNode {
+                        input = dampingPlayable
                     };
 
-                    parents.Add(name, playableParent);
+                    graphNodes.Add(name, playableParent);
 
                     ConnectNodeToParent(parent, dampingPlayable, initialWeight);
+                    parent.inputCount++;
+                    graphNodes[animationInput.parent] = parent;
 
                 }
 
-            } else if (animationInput.animationBrain.HasValue) {
+            } else if (animationInput.AnimationBrain.HasValue) {
 
-                if (parents.ContainsKey(name)) {
+                if (graphNodes.ContainsKey(name)) {
                     Debug.LogError($"Brain with name {name} is already exists");
                     return;
                 }
@@ -284,18 +397,20 @@ namespace animator {
                 brain = brainNode.GetBehaviour();
                 brain.Initialize();
 
-                var playableParent = new PlayableParent {
-                    inputParent = brainNode
+                var playableParent = new GraphNode {
+                    input = brainNode
                 };
 
-                parents.Add(name, playableParent);
+                graphNodes.Add(name, playableParent);
 
                 ConnectNodeToParent(parent, brainNode,initialWeight);
+                parent.inputCount++;
+                graphNodes[animationInput.parent] = parent;
             }
         }
 
         private void ProcessAddControllerCommand(Command command) {
-            var controller = command.AddContoller.Value.animationController;
+            var controller = command.AddContoller.Value.AnimationController;
             if (brain.AnimControllers == null) {
                 Debug.LogError("No Animation Brain");
                 return;
@@ -304,16 +419,16 @@ namespace animator {
                 Debug.LogError($"Controller with name {controller.name} is already exists");
                 return;
             }
-            if (controller.weightController.HasValue) {
-                var weightController = controller.weightController.Value;
+            if (controller.WeightController.HasValue) {
+                var weightController = controller.WeightController.Value;
                 var weightExecuter = new WeightControllerExecutor();
-                if (weightController.circleController.HasValue) {
+                if (weightController.CircleController.HasValue) {
                     var circleExecuter = new CircleControllerExecutor();
-                    circleExecuter.isClose = weightController.circleController.Value.isClose;
+                    circleExecuter.isClose = weightController.CircleController.Value.isClose;
                     weightExecuter.additionalControllerExecuter = circleExecuter;
 
-                } else if (weightController.randomController.HasValue) {
-                    var randomWeights = weightController.randomController.Value.randomWeights;
+                } else if (weightController.RandomController.HasValue) {
+                    var randomWeights = weightController.RandomController.Value.randomWeights;
                     if (randomWeights == null) {
                         Debug.LogError($"No randomWeights on {controller.name}");
                         return;
@@ -327,16 +442,17 @@ namespace animator {
                 }
 
                 List<ClipNode> animationNodes = new List<ClipNode>();
-                foreach (var item in controller.weightController.Value.animationNames) {
+                foreach (var item in controller.WeightController.Value.animationNames) {
                     if (!clipNodes.ContainsKey(item)) {
                         Debug.LogError("Unknown ClipNode Name");
                         continue;
                     }
                     animationNodes.Add(clipNodes[item]);
                 }
-                animationNodes[0].PlayableClip.SetTime(0);
+
 
                 weightExecuter.animationNodes = animationNodes;
+                weightExecuter.Disable();
                 brain.AnimControllers.Add(controller.name, weightExecuter);
 
 
@@ -347,34 +463,31 @@ namespace animator {
         }
 
         private void ProcessAddOutputCommand(Command command) {
-            var animOutput = command.AddOutput.Value.animationOutput;
+            var animOutput = command.AddOutput.Value.AnimationOutput;
             string outputName = animOutput.name;
 
-            if (parents.ContainsKey(outputName)) {
+            if (graphNodes.ContainsKey(outputName)) {
                 Debug.LogError($"Output with name {outputName} is already exists");
                 return;
             }
 
             var playableOut = AnimationPlayableOutput.Create(graph, outputName, animator);
 
-            var parentPlayable = new PlayableParent {
-                outputParent = playableOut
+            var parentPlayable = new GraphNode {
+                output = playableOut
             };
 
-            parents.Add(outputName, parentPlayable);
+            graphNodes.Add(outputName, parentPlayable);
         }
 
-        private void ConnectNodeToParent(PlayableParent parent, Playable playable, float weight) {
-            if (parent.inputParent.IsNull()) {
-                parent.outputParent.SetSourcePlayable(playable);
+        private void ConnectNodeToParent(GraphNode parent, Playable playable, float weight) {
+            if (!parent.input.HasValue) {
+                parent.output.Value.SetSourcePlayable(playable);
+                parent.output.Value.SetWeight(weight);
             } else {
-                parent.inputParent.AddInput(playable, 0);
-                parent.inputParent.SetInputWeight(playable, weight);
+                parent.input.Value.AddInput(playable, 0);
+                parent.input.Value.SetInputWeight(playable, weight);
             }
-        }
-
-        public PlayableGraph GraphPeel() {
-            return graph;
         }
 
         private void OnDestroy() {
