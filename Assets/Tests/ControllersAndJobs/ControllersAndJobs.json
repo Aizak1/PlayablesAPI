@@ -14,7 +14,7 @@
                         },
                         "name":"brain",
                         "parent":"main",
-                        "initialWeight": 0
+                        "initialWeight": 1
                     }
                 }
             },{
@@ -24,7 +24,7 @@
                         },
                         "name":"mixer1",
                         "parent":"brain",
-                        "initialWeight": 0
+                        "initialWeight": 1
                     }
                 }
             },{
@@ -34,7 +34,7 @@
                         },
                         "name":"layerMixer1",
                         "parent":"mixer1",
-                        "initialWeight": 0
+                        "initialWeight": 1
                     }
                 }
             },{
@@ -209,7 +209,7 @@
                             "CircleController":{
                                 "isClose": true
                             },
-                            "animationNames":["anim2", "anim1"]
+                            "animationNames":["anim1", "anim2"]
                         }
                     }
                 }
@@ -236,43 +236,6 @@
                             "animationNames":["anim5", "anim6", "anim7"]
                         }
                     }
-                }
-            },{
-                "ChangeWeight":{
-                    "name": "brain",
-                    "parent": "main",
-                    "weight": 1
-                }
-            },{
-                "ChangeWeight":{
-                    "name": "mixer1",
-                    "parent": "brain",
-                    "weight": 1
-                }
-            },{
-                "ChangeWeight":{
-                    "name": "layerMixer1",
-                    "parent": "mixer1",
-                    "weight": 1
-                }
-            },{
-                "ChangeWeight":{
-                    "name": "damping",
-                    "parent": "layerMixer1",
-                    "weight": 1
-                }
-            },{
-                "ChangeWeight":{
-                    "name": "mixer4",
-                    "parent": "damping",
-                    "weight": 1
-                }
-            },{
-                "ChangeControllersState":{
-                    "EnableControllers":{
-                        
-                    },
-                    "controllerNames": ["random"]
                 }
             }
         ]

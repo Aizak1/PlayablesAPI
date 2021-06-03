@@ -4,7 +4,7 @@ using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 namespace animator {
-    public struct ClipNode {
+    public struct ClipNodeInfo {
         public AnimationClipPlayable playableClip;
         public GraphNode parent;
         public float transitionDuration;

@@ -1,0 +1,25 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "name":"main"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Silly Dancing"
+                        },
+                        "name":"anim1",
+                        "parent":"main",
+                        "initialWeight": 1
+                    }
+                }
+            }
+        ]
+    }
+}

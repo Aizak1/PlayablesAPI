@@ -27,8 +27,8 @@ namespace animator {
     }
 
     public struct WeightControllerExecutor : IController {
-        public IAdditionalController additionalControllerExecuter;
-        public List<ClipNode> animationNodes;
+        public IAdditionalController executor;
+        public List<ClipNodeInfo> clipNodesInfo;
         private bool isEnabled;
 
         private int currentAnimationIndex;
@@ -40,21 +40,21 @@ namespace animator {
                 return;
             }
 
-            if (nextAnimationIndex == currentAnimationIndex && animationNodes.Count != 1) {
+            if (nextAnimationIndex == currentAnimationIndex && clipNodesInfo.Count != 1) {
 
-                var nodes = animationNodes;
+                var nodes = clipNodesInfo;
                 var currentIndex = currentAnimationIndex;
-                nextAnimationIndex = additionalControllerExecuter.GetNextNode(nodes, currentIndex);
+                nextAnimationIndex = executor.GetNextNode(nodes, currentIndex);
 
 
             } else {
-                var current = animationNodes[currentAnimationIndex];
+                var current = clipNodesInfo[currentAnimationIndex];
 
                 if (!IsTimeToMakeTransition(current)) {
                     return;
                 }
 
-                var next = animationNodes[nextAnimationIndex];
+                var next = clipNodesInfo[nextAnimationIndex];
 
                 MakeTransition(current, next);
 
@@ -63,12 +63,12 @@ namespace animator {
                 }
 
                 currentAnimationIndex = nextAnimationIndex;
-                current = animationNodes[currentAnimationIndex];
+                current = clipNodesInfo[currentAnimationIndex];
                 current.playableClip.SetTime(0);
             }
         }
 
-        private bool IsEndOfTransition(ClipNode current) {
+        private bool IsEndOfTransition(ClipNodeInfo current) {
             float length = current.animationLength;
             float currentClipTime = (float)current.playableClip.GetTime();
 
@@ -79,7 +79,7 @@ namespace animator {
             return false;
         }
 
-        private void MakeTransition(ClipNode current, ClipNode next) {
+        private void MakeTransition(ClipNodeInfo current, ClipNodeInfo next) {
             float length = current.animationLength;
             float duration = current.transitionDuration;
             float startTransitionTime = length - duration;
@@ -91,7 +91,7 @@ namespace animator {
             SpreadWeight(weight, current, next);
         }
 
-        private void SpreadWeight(float weight, ClipNode current, ClipNode next) {
+        private void SpreadWeight(float weight, ClipNodeInfo current, ClipNodeInfo next) {
 
             if (!current.parent.input.HasValue) {
                 return;
@@ -101,7 +101,7 @@ namespace animator {
             next.parent.input.Value.SetInputWeight(next.playableClip, weight);
         }
 
-        public bool IsTimeToMakeTransition(ClipNode current) {
+        public bool IsTimeToMakeTransition(ClipNodeInfo current) {
             float length = current.animationLength;
             float duration = current.transitionDuration;
             float startTransitionTime = length - duration;
@@ -116,11 +116,21 @@ namespace animator {
 
         public void Enable() {
             isEnabled = true;
-            animationNodes[0].playableClip.SetTime(0);
+            foreach (var item in clipNodesInfo) {
+                item.parent.input.Value.SetInputWeight(item.playableClip, 0);
+                item.playableClip.SetTime(item.animationLength);
+            }
+            nextAnimationIndex = currentAnimationIndex = 0;
+            clipNodesInfo[0].playableClip.SetTime(0);
+            clipNodesInfo[0].parent.input.Value.SetInputWeight(clipNodesInfo[0].playableClip, 1);
         }
 
         public void Disable() {
             isEnabled = false;
+            foreach (var item in clipNodesInfo) {
+                item.parent.input.Value.SetInputWeight(item.playableClip, 0);
+                item.playableClip.SetTime(item.animationLength);
+            }
         }
     }
 
@@ -129,7 +139,7 @@ namespace animator {
     public struct CircleControllerExecutor : IAdditionalController {
         public bool isClose;
 
-        public int GetNextNode(List<ClipNode> nodes, int currentIndex) {
+        public int GetNextNode(List<ClipNodeInfo> nodes, int currentIndex) {
 
             int nextIndex = currentIndex + 1;
 
@@ -149,7 +159,7 @@ namespace animator {
     public struct RandomControllerExecutor : IAdditionalController {
         public List<int> randomWeights;
 
-        public int GetNextNode(List<ClipNode> nodes, int currentIndex) {
+        public int GetNextNode(List<ClipNodeInfo> nodes, int currentIndex) {
 
             int nextIndex = 0;
             int sum = 0;

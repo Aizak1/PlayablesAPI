@@ -1,0 +1,90 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "name":"main"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationBrain":{
+                        },
+                        "name":"brain",
+                        "parent":"main",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationJob":{
+                            "TwoBoneIKJob":{
+                                "jointPath": "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand",
+                                "effectorName": "Effector"
+                            }
+                        },
+                        "name":"twoBone",
+                        "parent":"brain",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "name":"mixer",
+                        "parent":"twoBone",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Silly Dancing"
+                        },
+                        "name":"anim1",
+                        "parent":"mixer",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Spin In Place"
+                        },
+                        "name":"anim2",
+                        "parent":"mixer",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
+                        "name": "close",
+                        "WeightController":{
+                            "CircleController":{
+                                "isClose": true
+                            },
+                            "animationNames":["anim1", "anim2"]
+                        }
+                    }
+                }
+            },{
+                "ChangeControllersState":{
+                    "EnableControllers":{
+                        
+                    },
+                    "controllerNames": ["close"]
+                }
+            }
+        ]
+    }
+}

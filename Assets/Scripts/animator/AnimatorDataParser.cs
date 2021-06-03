@@ -45,6 +45,18 @@ namespace animator {
         private const string TWOBONE_IK_JOB = "TwoBoneIKJob";
         private const string DAMPING_JOB = "DampingJob";
 
+        private const string JOINT_PATH = "jointPath";
+        private const string JOINT_PATHES = "jointPathes";
+
+        private const string AXIS_X = "axisX";
+        private const string AXIS_Y = "axisY";
+        private const string AXIS_Z = "axisZ";
+
+        private const string EFFECTOR_NAME = "effectorName";
+        private const string MIN_ANGLE = "minAngle";
+        private const string MAX_ANGLE = "maxAngle";
+
+
         private const string ANIMATION_CONTROLLER = "AnimationController";
         private const string RANDOM_WEIGHTS = "randomWeights";
         private const string IS_CLOSE = "isClose";
@@ -502,13 +514,181 @@ namespace animator {
                 var animationJobInput = new AnimationJobInput();
 
                 if (animationJobDict.ContainsKey(LOOK_AT_JOB)) {
-                    animationJobInput.LookAtJob = new LookAtJobInput();
+                    if (animationJobDict[LOOK_AT_JOB].Obj.IsNone()) {
+                        Debug.LogError("Look At Job field is empty");
+                        return null;
+                    }
+                    var lookAtJobDict = animationJobDict[LOOK_AT_JOB].Obj.Peel();
+                    var lookAtJob = new LookAtJobInput();
+                    if (!lookAtJobDict.ContainsKey(JOINT_PATH)) {
+                        Debug.LogError("No joint path field ");
+                        return null;
+                    }
+
+                    if (lookAtJobDict[JOINT_PATH].Str.IsNone()) {
+                        Debug.LogError("joint path field is empty");
+                    }
+
+                    if (!lookAtJobDict.ContainsKey(AXIS_X)) {
+                        Debug.LogError("No xAxis field");
+                        return null;
+                    }
+
+                    if (lookAtJobDict[AXIS_X].Num.IsNone()) {
+                        Debug.LogError("xAxis field is empty");
+                        return null;
+                    }
+
+                    if (!lookAtJobDict.ContainsKey(AXIS_Y)) {
+                        Debug.LogError("No yAxis field");
+                        return null;
+                    }
+
+                    if (lookAtJobDict[AXIS_Y].Num.IsNone()) {
+                        Debug.LogError("yAxis field is empty");
+                        return null;
+                    }
+
+                    if (!lookAtJobDict.ContainsKey(AXIS_Z)) {
+                        Debug.LogError("No zAxis field");
+                        return null;
+                    }
+
+                    if (lookAtJobDict[AXIS_Z].Num.IsNone()) {
+                        Debug.LogError("zAxis field is empty");
+                        return null;
+                    }
+
+                    if (!lookAtJobDict.ContainsKey(EFFECTOR_NAME)) {
+                        Debug.LogError("No effectorName field ");
+                        return null;
+                    }
+
+                    if (lookAtJobDict[EFFECTOR_NAME].Str.IsNone()) {
+                        Debug.LogError("effectorName field is empty");
+                    }
+
+                    if (!lookAtJobDict.ContainsKey(MIN_ANGLE)) {
+                        Debug.LogError("No minAngle field");
+                        return null;
+                    }
+
+                    if (lookAtJobDict[MIN_ANGLE].Num.IsNone()) {
+                        Debug.LogError("minAngle field is empty");
+                        return null;
+                    }
+
+                    if (!lookAtJobDict.ContainsKey(MAX_ANGLE)) {
+                        Debug.LogError("No maxAngle field");
+                        return null;
+                    }
+
+                    if (lookAtJobDict[MAX_ANGLE].Num.IsNone()) {
+                        Debug.LogError("maxAngle field is empty");
+                        return null;
+                    }
+                    string tempX = lookAtJobDict[AXIS_X].Num.Peel();
+                    string tempY = lookAtJobDict[AXIS_Y].Num.Peel();
+                    string tempZ = lookAtJobDict[AXIS_Z].Num.Peel();
+                    string tempMinAngle = lookAtJobDict[MIN_ANGLE].Num.Peel();
+                    string tempMaxAngle = lookAtJobDict[MAX_ANGLE].Num.Peel();
+
+                    if (!float.TryParse(tempX, NumberStyles.Any, ci, out float xAxis)) {
+                        Debug.LogError("xAxis isn't number");
+                        return null;
+                    }
+
+                    if (!float.TryParse(tempY, NumberStyles.Any, ci, out float yAxis)) {
+                        Debug.LogError("yAxis isn't number");
+                        return null;
+                    }
+
+                    if (!float.TryParse(tempZ, NumberStyles.Any, ci, out float zAxis)) {
+                        Debug.LogError("zAxis isn't number");
+                        return null;
+                    }
+
+                    if (!float.TryParse(tempMinAngle, NumberStyles.Any, ci, out float minAngle)) {
+                        Debug.LogError("min angle isn't number");
+                        return null;
+                    }
+
+                    if (!float.TryParse(tempMaxAngle, NumberStyles.Any, ci, out float maxAngle)) {
+                        Debug.LogError("maxAngle  isn't number");
+                        return null;
+                    }
+
+
+
+                    lookAtJob.jointPath = lookAtJobDict[JOINT_PATH].Str.Peel();
+                    lookAtJob.axisX = xAxis;
+                    lookAtJob.axisY = yAxis;
+                    lookAtJob.axisZ = zAxis;
+                    lookAtJob.effectorName = lookAtJobDict[EFFECTOR_NAME].Str.Peel();
+                    lookAtJob.minAngle = minAngle;
+                    lookAtJob.maxAngle = maxAngle;
+                    animationJobInput.LookAtJob = lookAtJob;
 
                 } else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
-                    animationJobInput.TwoBoneIKJob = new TwoBoneIKJobInput();
+
+                    if (animationJobDict[TWOBONE_IK_JOB].Obj.IsNone()) {
+                        Debug.LogError("TwoBoneIkJob field is empty");
+                        return null;
+                    }
+                    var twoBoneIkDict = animationJobDict[TWOBONE_IK_JOB].Obj.Peel();
+                    var twoBoneIKInput = new TwoBoneIKJobInput();
+                    if (!twoBoneIkDict.ContainsKey(JOINT_PATH)) {
+                        Debug.LogError("No joint path field ");
+                        return null;
+                    }
+
+                    if (twoBoneIkDict[JOINT_PATH].Str.IsNone()) {
+                        Debug.LogError("joint path field is empty");
+                    }
+
+                    if (!twoBoneIkDict.ContainsKey(EFFECTOR_NAME)) {
+                        Debug.LogError("No effectorName field ");
+                        return null;
+                    }
+
+                    if (twoBoneIkDict[EFFECTOR_NAME].Str.IsNone()) {
+                        Debug.LogError("effectorName field is empty");
+                    }
+
+                    twoBoneIKInput.jointPath = twoBoneIkDict[JOINT_PATH].Str.Peel();
+                    twoBoneIKInput.effectorName = twoBoneIkDict[EFFECTOR_NAME].Str.Peel();
+                    animationJobInput.TwoBoneIKJob = twoBoneIKInput;
+
 
                 } else if (animationJobDict.ContainsKey(DAMPING_JOB)) {
-                    animationJobInput.DampingJob = new DampingJobInput();
+                    if (animationJobDict[DAMPING_JOB].Obj.IsNone()) {
+                        Debug.LogError("Look At Job field is empty");
+                        return null;
+                    }
+                    var dampingJobDict = animationJobDict[DAMPING_JOB].Obj.Peel();
+                    var dampingJobInput = new DampingJobInput();
+
+                    if (!dampingJobDict.ContainsKey(JOINT_PATHES)) {
+                        Debug.LogError("No joint pathes field");
+                        return null;
+                    }
+
+                    if (dampingJobDict[JOINT_PATHES].Arr.IsNone()) {
+                        Debug.LogError("joint pathes field is empty");
+                        return null;
+                    }
+
+                    List<string> jointPathes = new List<string>();
+                    List<JSONType> pathes = dampingJobDict[JOINT_PATHES].Arr.Peel();
+                    foreach (var name in pathes) {
+                        if (name.Str.IsNone()) {
+                            Debug.LogError("Wrong path");
+                            continue;
+                        }
+                        jointPathes.Add(name.Str.Peel());
+                    }
+                    dampingJobInput.jointPathes = jointPathes;
+                    animationJobInput.DampingJob = dampingJobInput;
 
                 } else {
                     Debug.LogError("Unknown job");

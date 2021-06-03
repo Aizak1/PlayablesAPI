@@ -1,0 +1,95 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "name":"main"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationBrain":{
+                        },
+                        "name":"brain",
+                        "parent":"main",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationJob":{
+                            "LookAtJob":{
+                                "jointPath": "Model/Hips/Spine/Spine1/Spine2/Neck/Neck1/Head",
+                                "axisX": 0,
+                                "axisY": 0,
+                                "axisZ": 1,
+                                "effectorName": "Cube 1",
+                                "minAngle": -60,
+                                "maxAngle": 60
+                            }
+                        },
+                        "name":"lookJob",
+                        "parent":"brain",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "name":"mixer",
+                        "parent":"lookJob",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Clapping"
+                        },
+                        "name":"anim1",
+                        "parent":"mixer",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Flair"
+                        },
+                        "name":"anim2",
+                        "parent":"mixer",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
+                        "name": "close",
+                        "WeightController":{
+                            "CircleController":{
+                                "isClose": true
+                            },
+                            "animationNames":["anim1", "anim2"]
+                        }
+                    }
+                }
+            },{
+                "ChangeControllersState":{
+                    "EnableControllers":{
+                        
+                    },
+                    "controllerNames": ["close"]
+                }
+            }
+        ]
+    }
+}

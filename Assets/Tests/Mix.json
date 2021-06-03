@@ -1,0 +1,144 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "name":"main"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationBrain":{
+                        },
+                        "name":"brain",
+                        "parent":"main",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "name":"mixer",
+                        "parent":"brain",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationLayerMixer":{
+                        },
+                        "name":"layerMixer1",
+                        "parent":"mixer",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationLayerMixer":{
+                        },
+                        "name":"layerMixer2",
+                        "parent":"mixer",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Clapping"
+                        },
+                        "name":"anim1",
+                        "parent":"layerMixer1",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Flair"
+                        },
+                        "name":"anim2",
+                        "parent":"layerMixer1",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Silly Dancing"
+                        },
+                        "name":"anim3",
+                        "parent":"layerMixer2",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Spin In Place"
+                        },
+                        "name":"anim4",
+                        "parent":"layerMixer2",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
+                        "name": "close1",
+                        "WeightController":{
+                            "CircleController":{
+                                "isClose": true
+                            },
+                            "animationNames":["anim1", "anim2"]
+                        }
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
+                        "name": "close2",
+                        "WeightController":{
+                            "CircleController":{
+                                "isClose": true
+                            },
+                            "animationNames":["anim3", "anim4"]
+                        }
+                    }
+                }
+            },{
+                "SetLayerMask":{
+                    "maskName": "Up",
+                    "isAdditive": false,
+                    "animationNames": ["anim1", "anim2"]
+                }
+            },{
+                "SetLayerMask":{
+                    "maskName": "Down",
+                    "isAdditive": false,
+                    "animationNames": ["anim3", "anim4"]
+                }
+            },{
+                "ChangeControllersState":{
+                    "EnableControllers":{
+                        
+                    },
+                    "controllerNames": ["close1", "close2"]
+                }
+            }
+        ]
+    }
+}

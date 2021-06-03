@@ -6,133 +6,91 @@ using UnityEngine.Animations;
 #else
 using UnityEngine.Experimental.Animations;
 #endif
+namespace animationJobs {
+    public struct DampingJob : IAnimationJob {
+        public TransformStreamHandle rootHandle;
+        public NativeArray<TransformStreamHandle> jointHandles;
+        public NativeArray<Vector3> localPositions;
+        public NativeArray<Quaternion> localRotations;
+        public NativeArray<Vector3> positions;
+        public NativeArray<Vector3> velocities;
 
-public struct DampingJob : IAnimationJob
-{
-    public TransformStreamHandle rootHandle;
-    public NativeArray<TransformStreamHandle> jointHandles;
-    public NativeArray<Vector3> localPositions;
-    public NativeArray<Quaternion> localRotations;
-    public NativeArray<Vector3> positions;
-    public NativeArray<Vector3> velocities;
 
+        public void ProcessRootMotion(AnimationStream stream) {
+            var rootPosition = rootHandle.GetPosition(stream);
+            var rootRotation = rootHandle.GetRotation(stream);
 
-    /// <summary>
-    /// Transfer the root position and rotation through the graph.
-    /// </summary>
-    /// <param name="stream">The animation stream</param>
-    public void ProcessRootMotion(AnimationStream stream)
-    {
-        // Get root position and rotation.
-        var rootPosition = rootHandle.GetPosition(stream);
-        var rootRotation = rootHandle.GetRotation(stream);
+            rootHandle.SetPosition(stream, rootPosition);
+            rootHandle.SetRotation(stream, rootRotation);
+        }
 
-        // The root always follow the given position and rotation.
-        rootHandle.SetPosition(stream, rootPosition);
-        rootHandle.SetRotation(stream, rootRotation);
-    }
+        public void ProcessAnimation(AnimationStream stream) {
+            if (jointHandles.Length < 2)
+                return;
 
-    /// <summary>
-    /// Procedurally generate the joints rotation.
-    /// </summary>
-    /// <param name="stream">The animation stream</param>
-    public void ProcessAnimation(AnimationStream stream)
-    {
-        if (jointHandles.Length < 2)
-            return;
+            ComputeDampedPositions(stream);
+            ComputeJointLocalRotations(stream);
+        }
 
-        ComputeDampedPositions(stream);
-        ComputeJointLocalRotations(stream);
-    }
+        private void ComputeDampedPositions(AnimationStream stream) {
+            var rootPosition = rootHandle.GetPosition(stream);
+            var rootRotation = rootHandle.GetRotation(stream);
+            var parentPosition = rootPosition + rootRotation * localPositions[0];
+            var parentRotation = rootRotation * localRotations[0];
+            positions[0] = parentPosition;
+            for (var i = 1; i < jointHandles.Length; ++i) {
+                var newPosition = parentPosition + (parentRotation * localPositions[i]);
+                var velocity = velocities[i];
+                newPosition = Vector3.SmoothDamp(positions[i], newPosition,
+                    ref velocity, 0.15f, Mathf.Infinity, stream.deltaTime);
 
-    /// <summary>
-    /// Compute the new global positions of the joints.
-    ///
-    /// The position of the first joint is driven by the root's position, and
-    /// then the other joints positions are recomputed in order to follow their
-    /// initial local positions, smoothly.
-    ///
-    /// Algorithm breakdown:
-    ///     1. Compute the target position;
-    ///     2. Damp this target position based on the current position;
-    ///     3. Constrain the damped position to the joint initial length;
-    ///     4. Iterate on the next joint.
-    /// </summary>
-    /// <param name="stream">The animation stream</param>
-    private void ComputeDampedPositions(AnimationStream stream)
-    {
-        // Get root position and rotation.
-        var rootPosition = rootHandle.GetPosition(stream);
-        var rootRotation = rootHandle.GetRotation(stream);
+                newPosition = parentPosition +
+                    (newPosition - parentPosition).normalized * localPositions[i].magnitude;
 
-        // The first non-root joint follows the root position,
-        // but its rotation is damped (see ComputeJointLocalRotations).
-        var parentPosition = rootPosition + rootRotation * localPositions[0];
-        var parentRotation = rootRotation * localRotations[0];
-        positions[0] = parentPosition;
-        for (var i = 1; i < jointHandles.Length; ++i)
-        {
-            // The target position is the global position, without damping.
-            var newPosition = parentPosition + (parentRotation * localPositions[i]);
+                velocities[i] = velocity;
+                positions[i] = newPosition;
 
-            // Apply damping on this target.
-            var velocity = velocities[i];
-            newPosition = Vector3.SmoothDamp(positions[i], newPosition,
-                ref velocity, 0.15f, Mathf.Infinity, stream.deltaTime);
+                parentPosition = newPosition;
+                parentRotation = parentRotation * localRotations[i];
+            }
+        }
 
-            // Apply constraint: keep original length between joints.
-            newPosition = parentPosition +
-                (newPosition - parentPosition).normalized * localPositions[i].magnitude;
+        private void ComputeJointLocalRotations(AnimationStream stream) {
+            var parentRotation = rootHandle.GetRotation(stream);
+            for (var i = 0; i < jointHandles.Length - 1; ++i) {
 
-            // Save new velocity and position for next frame.
-            velocities[i] = velocity;
-            positions[i] = newPosition;
+                var rotation = parentRotation * localRotations[i];
 
-            // Current joint is now the parent of the next joint.
-            parentPosition = newPosition;
-            parentRotation = parentRotation * localRotations[i];
+                var direction = (rotation * localPositions[i + 1]).normalized;
+
+                var newDirection = (positions[i + 1] - positions[i]).normalized;
+
+                var currentToNewRotation = Quaternion.FromToRotation(direction, newDirection);
+
+                rotation = currentToNewRotation * rotation;
+
+                var newLocalRotation = Quaternion.Inverse(parentRotation) * rotation;
+                jointHandles[i].SetLocalRotation(stream, newLocalRotation);
+
+                parentRotation = rotation;
+            }
         }
     }
+    public struct DampingJobTemp {
+        public NativeArray<TransformStreamHandle> Handles;
+        public NativeArray<Vector3> LocalPositions;
+        public NativeArray<Quaternion> LocalRotations;
+        public NativeArray<Vector3> Positions;
+        public NativeArray<Vector3> Velocities;
 
-    /// <summary>
-    /// Compute the new local rotations of the joints.
-    ///
-    /// Based on the global positions computed in ComputeDampedPositions,
-    /// recompute the local rotation of each joint.
-    ///
-    /// Algorithm breakdown:
-    ///     1. Compute the rotation between the current and new directions of the joint;
-    ///     2. Apply this rotation on the current joint rotation;
-    ///     3. Compute the local rotation and set it in the stream;
-    ///     4. Iterate on the next joint.
-    /// </summary>
-    /// <param name="stream">The animation stream</param>
-    private void ComputeJointLocalRotations(AnimationStream stream)
-    {
-        var parentRotation = rootHandle.GetRotation(stream);
-        for (var i = 0; i < jointHandles.Length - 1; ++i)
-        {
-            // Get the current joint rotation.
-            var rotation = parentRotation * localRotations[i];
+        public void DisposeData() {
+            Handles.Dispose();
+            LocalPositions.Dispose();
+            LocalRotations.Dispose();
+            Positions.Dispose();
+            Velocities.Dispose();
 
-            // Get the current joint direction.
-            var direction = (rotation * localPositions[i + 1]).normalized;
-
-            // Get the wanted joint direction.
-            var newDirection = (positions[i + 1] - positions[i]).normalized;
-
-            // Compute the rotation from the current direction to the new direction.
-            var currentToNewRotation = Quaternion.FromToRotation(direction, newDirection);
-
-            // Pre-rotate the current rotation, to get the new global rotation.
-            rotation = currentToNewRotation * rotation;
-
-            // Set the new local rotation.
-            var newLocalRotation = Quaternion.Inverse(parentRotation) * rotation;
-            jointHandles[i].SetLocalRotation(stream, newLocalRotation);
-
-            // Set the new parent for the next joint.
-            parentRotation = rotation;
         }
     }
 }
+

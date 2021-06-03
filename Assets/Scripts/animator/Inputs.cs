@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace animator {
     public struct AnimationInput {
@@ -22,15 +24,26 @@ namespace animator {
     }
 
     public struct DampingJobInput {
-
+        public List<string> jointPathes;
     }
 
     public struct LookAtJobInput {
+        public string jointPath;
+
+        public float axisX;
+        public float axisY;
+        public float axisZ;
+
+        public string effectorName;
+        public float minAngle;
+        public float maxAngle;
+
 
     }
 
     public struct TwoBoneIKJobInput {
-
+        public string jointPath;
+        public string effectorName;
     }
 
     public struct AnimationClipInput {

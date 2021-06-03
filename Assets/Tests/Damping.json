@@ -1,0 +1,105 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "AddOutput":{
+                    "AnimationOutput":{
+                        "name":"main"
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationBrain":{
+                        },
+                        "name":"brain",
+                        "parent":"main",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationJob":{
+                            "DampingJob":{
+                                "jointPathes": ["Model/Hips/Spine/Spine1/Spine2/RightShoulder",
+                                    "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm",
+                                    "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm",
+                                    "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand"
+                                ]
+                            }
+                        },
+                        "name":"damping",
+                        "parent":"brain",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationMixer":{
+                        },
+                        "name":"mixer",
+                        "parent":"damping",
+                        "initialWeight": 1
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Silly Dancing"
+                        },
+                        "name":"anim1",
+                        "parent":"mixer",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Spin In Place"
+                        },
+                        "name":"anim2",
+                        "parent":"mixer",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddInput":{
+                    "AnimationInput":{
+                        "AnimationClip":{
+                            "transitionDuration":0.5,
+                            "clipName":"Clapping"
+                        },
+                        "name":"anim3",
+                        "parent":"mixer",
+                        "initialWeight": 0
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
+                        "name": "close",
+                        "WeightController":{
+                            "CircleController":{
+                                "isClose": true
+                            },
+                            "animationNames":["anim1", "anim2", "anim3"]
+                        }
+                    }
+                }
+            },{
+                "ChangeControllersState":{
+                    "EnableControllers":{
+                        
+                    },
+                    "controllerNames": ["close"]
+                }
+            }
+        ]
+    }
+}

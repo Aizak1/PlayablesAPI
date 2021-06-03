@@ -1,0 +1,38 @@
+{
+    "InputData":{
+        "Commands":[
+            {
+                "ChangeWeight":{
+                    "name": "lookJob",
+                    "parent": "layerMixer1",
+                    "weight": 0
+                }
+            },{
+                "ChangeWeight":{
+                    "name": "mixer2",
+                    "parent": "lookJob",
+                    "weight": 0
+                }
+            },{
+                "ChangeWeight":{
+                    "name": "twoBone",
+                    "parent": "layerMixer1",
+                    "weight": 1
+                }
+            },{
+                "ChangeWeight":{
+                    "name": "mixer3",
+                    "parent": "twoBone",
+                    "weight": 1
+                }
+            },{
+                "ChangeControllersState":{
+                    "EnableControllers":{
+                        
+                    },
+                    "controllerNames": ["open"]
+                }
+            }
+        ]
+    }
+}
