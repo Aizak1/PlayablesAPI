@@ -8,12 +8,10 @@ namespace animator {
     public class Brain : PlayableBehaviour {
 
         public Dictionary<string, IController> AnimControllers;
-        public List<string> ControllerNames;
 
         public void Initialize() {
 
             AnimControllers = new Dictionary<string, IController>();
-            ControllerNames = new List<string>();
         }
 
         override public void PrepareFrame(Playable owner, FrameData info) {

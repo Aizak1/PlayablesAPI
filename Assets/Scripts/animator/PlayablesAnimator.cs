@@ -60,18 +60,27 @@ namespace animator {
 
         private void ProcessCommand(Command command) {
             if (command.AddInput.HasValue) {
+
                 ProcessAddInputCommand(command);
 
             } else if (command.AddContoller.HasValue) {
+
                 ProcessAddControllerCommand(command);
 
             } else if (command.AddOutput.HasValue) {
+
                 ProcessAddOutputCommand(command);
+
             } else if (command.ChangeControllersState.HasValue) {
+
                 ProcessChangeControllerCommand(command);
+
             } else if (command.ChangeWeight.HasValue) {
+
                 ProcessChangeWeightCommand(command);
+
             } else if (command.SetLayerMask.HasValue) {
+
                 ProcessSetLayerMask(command);
             }
         }
@@ -200,7 +209,7 @@ namespace animator {
 
                 AnimationClipPlayable animation = AnimationClipPlayable.Create(graph, clip);
                 ConnectNodeToParent(parent, animation, initialWeight);
-                parent.inputCount++;
+                parent.connectedNodesCount++;
                 graphNodes[animationInput.parent] = parent;
 
                 var newAnimation = new ClipNodeInfo {
@@ -208,7 +217,7 @@ namespace animator {
                     playableClip = animation,
                     transitionDuration = duration,
                     animationLength = length,
-                    portIndex = parent.inputCount - 1
+                    portIndex = parent.connectedNodesCount - 1
                 };
 
                 if (brain == null) {
@@ -239,7 +248,7 @@ namespace animator {
                 graphNodes.Add(name, playableParent);
 
                 ConnectNodeToParent(parent, playable, initialWeight);
-                parent.inputCount++;
+                parent.connectedNodesCount++;
                 graphNodes[animationInput.parent] = parent;
 
             } else if (animationInput.AnimationLayerMixer.HasValue) {
@@ -257,7 +266,7 @@ namespace animator {
                 graphNodes.Add(name, playableParent);
 
                 ConnectNodeToParent(parent, playable, initialWeight);
-                parent.inputCount++;
+                parent.connectedNodesCount++;
                 graphNodes[animationInput.parent] = parent;
 
             } else if (animationInput.AnimationJob.HasValue) {
@@ -315,7 +324,7 @@ namespace animator {
                     graphNodes.Add(name, playableParent);
 
                     ConnectNodeToParent(parent, lookAtPlayable, initialWeight);
-                    parent.inputCount++;
+                    parent.connectedNodesCount++;
                     graphNodes[animationInput.parent] = parent;
 
                 } else if (job.TwoBoneIKJob.HasValue) {
@@ -366,7 +375,7 @@ namespace animator {
                     graphNodes.Add(name, playableParent);
 
                     ConnectNodeToParent(parent, twoBone, initialWeight);
-                    parent.inputCount++;
+                    parent.connectedNodesCount++;
                     graphNodes[animationInput.parent] = parent;
 
                 } else if (job.DampingJob.HasValue) {
@@ -453,7 +462,7 @@ namespace animator {
                     graphNodes.Add(name, playableParent);
 
                     ConnectNodeToParent(parent, dampingPlayable, initialWeight);
-                    parent.inputCount++;
+                    parent.connectedNodesCount++;
                     graphNodes[animationInput.parent] = parent;
 
                 }
@@ -477,7 +486,7 @@ namespace animator {
                 graphNodes.Add(name, playableParent);
 
                 ConnectNodeToParent(parent, brainNode,initialWeight);
-                parent.inputCount++;
+                parent.connectedNodesCount++;
                 graphNodes[animationInput.parent] = parent;
             }
         }
