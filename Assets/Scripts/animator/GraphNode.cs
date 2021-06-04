@@ -4,6 +4,6 @@ namespace animator {
     public struct GraphNode {
         public Playable? input;
         public PlayableOutput? output;
-        public int connectedNodesCount;
+        public int portIndex;
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 
@@ -8,134 +9,129 @@ namespace animator {
     public struct AnimationController {
         public string name;
         public WeightController? WeightController;
+        public CircleController? CircleController;
+        public RandomController? RandomController;
     }
 
     public struct WeightController {
-        public CircleController? CircleController;
-        public RandomController? RandomController;
 
-        public List<string> animationNames;
     }
 
     public struct CircleController {
+        public string weightControllerName;
         public bool isClose;
+        public List<AnimationInfo> animationInfos;
+
     }
 
     public struct RandomController {
+        public string weightControllerName;
         public List<int> randomWeights;
+        public List<AnimationInfo> animationInfos;
     }
 
     public struct WeightControllerExecutor : IController {
-        public IAdditionalController executor;
-        public List<ClipNodeInfo> clipNodesInfo;
-        private bool isEnabled;
+        private Playable currentAnimation;
+        private Playable nextAnimation;
 
-        private int currentAnimationIndex;
-        private int nextAnimationIndex;
+        private AnimationInfo currentInfo;
 
-        public void ProcessLogic(Playable owner, FrameData info) {
+        private bool isActive;
+        public bool isFree;
 
-            if (!isEnabled) {
+        public void Process(Playable owner, FrameData info) {
+
+            if (!isActive) {
                 return;
             }
 
-            if (nextAnimationIndex == currentAnimationIndex && clipNodesInfo.Count != 1) {
-
-                var nodes = clipNodesInfo;
-                var currentIndex = currentAnimationIndex;
-                nextAnimationIndex = executor.GetNextNode(nodes, currentIndex);
-
-            } else {
-                var current = clipNodesInfo[currentAnimationIndex];
-
-                if (!IsTimeToMakeTransition(current)) {
-                    return;
-                }
-
-                var next = clipNodesInfo[nextAnimationIndex];
-
-                MakeTransition(current, next);
-
-                if (!IsEndOfTransition(current)) {
-                    return;
-                }
-
-                currentAnimationIndex = nextAnimationIndex;
-                current = clipNodesInfo[currentAnimationIndex];
-                current.playableClip.SetTime(0);
-            }
-        }
-
-        private bool IsEndOfTransition(ClipNodeInfo current) {
-            float length = current.animationLength;
-            float currentClipTime = (float)current.playableClip.GetTime();
-
-            if (currentClipTime >= length) {
-                return true;
-            }
-
-            return false;
-        }
-
-        private void MakeTransition(ClipNodeInfo current, ClipNodeInfo next) {
-            float length = current.animationLength;
-            float duration = current.transitionDuration;
+            float length = currentInfo.animationLength;
+            float duration = currentInfo.transitionDuration;
             float startTransitionTime = length - duration;
-            float currentClipTime = (float)current.playableClip.GetTime();
+            float currentClipTime = (float)currentAnimation.GetTime();
 
             float transitionTime = currentClipTime - startTransitionTime;
             float weight = transitionTime / duration;
 
-            SpreadWeight(weight, current, next);
+            currentAnimation.GetOutput(0).SetInputWeight(currentAnimation, 1 - weight);
+            nextAnimation.GetOutput(0).SetInputWeight(nextAnimation, weight);
         }
 
-        private void SpreadWeight(float weight, ClipNodeInfo current, ClipNodeInfo next) {
+        public void Setup(
+            Playable currentAnimation,
+            Playable nextAnimation,
+            AnimationInfo currentInfo
+            ) {
 
-            if (!current.parent.input.HasValue) {
-                return;
-            }
-
-            current.parent.input.Value.SetInputWeight(current.playableClip, 1 - weight);
-            next.parent.input.Value.SetInputWeight(next.playableClip, weight);
+            this.currentAnimation = currentAnimation;
+            this.nextAnimation = nextAnimation;
+            this.currentInfo = currentInfo;
+            isActive = true;
         }
 
-        public bool IsTimeToMakeTransition(ClipNodeInfo current) {
-            float length = current.animationLength;
-            float duration = current.transitionDuration;
-            float startTransitionTime = length - duration;
-            float currentClipTime = (float)current.playableClip.GetTime();
-
-            if (currentClipTime >= startTransitionTime) {
-                return true;
-            }
-
-            return false;
-        }
-
-        public void Enable() {
-            isEnabled = true;
-            foreach (var item in clipNodesInfo) {
-                item.parent.input.Value.SetInputWeight(item.playableClip, 0);
-                item.playableClip.SetTime(item.animationLength);
-            }
-            nextAnimationIndex = currentAnimationIndex = 0;
-            clipNodesInfo[0].playableClip.SetTime(0);
-            clipNodesInfo[0].parent.input.Value.SetInputWeight(clipNodesInfo[0].playableClip, 1);
-        }
-
-        public void Disable() {
-            isEnabled = false;
-            foreach (var item in clipNodesInfo) {
-                item.parent.input.Value.SetInputWeight(item.playableClip, 0);
-                item.playableClip.SetTime(item.animationLength);
-            }
+        public void Reset() {
+            isActive = false;
         }
     }
 
-    public struct CircleControllerExecutor : IAdditionalController {
-        public bool isClose;
+    public struct CircleControllerExecutor : IController {
+        private bool isClose;
 
-        public int GetNextNode(List<ClipNodeInfo> nodes, int currentIndex) {
+        private Dictionary<string, Playable> animations;
+        private List<AnimationInfo> animationInfos;
+
+        private WeightControllerExecutor weightController;
+
+        private int currentAnimationIndex;
+        private int nextAnimationIndex;
+
+        private bool isInTransition;
+
+        public void Setup(
+            WeightControllerExecutor weightController,
+            List<AnimationInfo> animationInfos,
+            bool isClose,
+            Dictionary<string, Playable> animations
+            ) {
+
+            this.isClose = isClose;
+            this.animationInfos = animationInfos;
+            this.weightController = weightController;
+            this.animations = animations;
+            currentAnimationIndex = nextAnimationIndex = 0;
+            animations[animationInfos[0].name].SetTime(0);
+        }
+
+        public void Process(Playable owner, FrameData info) {
+
+            if (currentAnimationIndex == nextAnimationIndex) {
+                nextAnimationIndex = GetNextNode(animationInfos, currentAnimationIndex);
+            } else {
+                var animationInfo = animationInfos[currentAnimationIndex];
+                var animation = animations[animationInfo.name];
+                if (IsTimeToTransition(animation, animationInfo)) {
+                    if (!isInTransition) {
+                        var nextAnimation = animations[animationInfos[nextAnimationIndex].name];
+                        weightController.Setup(animation, nextAnimation, animationInfo);
+
+                        isInTransition = true;
+                    }
+                    weightController.Process(owner, info);
+
+                    if (IsEndOfAnimation(animation, animationInfo)) {
+                        currentAnimationIndex = nextAnimationIndex;
+                        animations[animationInfos[currentAnimationIndex].name].SetTime(0);
+                        isInTransition = false;
+                        weightController.Reset();
+                    }
+                }
+
+            }
+
+
+        }
+
+        private int GetNextNode(List<AnimationInfo> nodes, int currentIndex) {
 
             int nextIndex = currentIndex + 1;
 
@@ -150,12 +146,80 @@ namespace animator {
                 return currentIndex;
             }
         }
+
+        private bool IsTimeToTransition(Playable animation, AnimationInfo info) {
+
+            if (animation.GetTime() >= info.animationLength - info.transitionDuration) {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsEndOfAnimation(Playable animation, AnimationInfo info) {
+
+            if (animation.GetTime() >= info.animationLength) {
+                return true;
+            }
+
+            return false;
+        }
     }
 
-    public struct RandomControllerExecutor : IAdditionalController {
-        public List<int> randomWeights;
+    public struct RandomControllerExecutor : IController {
+        private List<int> randomWeights;
 
-        public int GetNextNode(List<ClipNodeInfo> nodes, int currentIndex) {
+        private Dictionary<string, Playable> animations;
+        private List<AnimationInfo> animationInfos;
+
+        private WeightControllerExecutor weightController;
+
+        private int currentAnimationIndex;
+        private int nextAnimationIndex;
+
+        private bool isInTransition;
+
+        public void Setup(
+            WeightControllerExecutor weightController,
+            List<AnimationInfo> animationInfos,
+            List<int> randomWeights,
+            Dictionary<string, Playable> animations
+            ) {
+
+            this.randomWeights = randomWeights;
+            this.animationInfos = animationInfos;
+            this.weightController = weightController;
+            this.animations = animations;
+            currentAnimationIndex = nextAnimationIndex = 0;
+            animations[animationInfos[0].name].SetTime(0);
+        }
+        public void Process(Playable owner, FrameData info) {
+
+            if (currentAnimationIndex == nextAnimationIndex) {
+                nextAnimationIndex = GetNextNode(currentAnimationIndex, randomWeights);
+            }
+
+            var animationInfo = animationInfos[currentAnimationIndex];
+            var animation = animations[animationInfo.name];
+
+            if (IsTimeToTransition(animation, animationInfo)) {
+                if (!isInTransition) {
+                    var nextAnimation = animations[animationInfos[nextAnimationIndex].name];
+                    weightController.Setup(animation, nextAnimation, animationInfo);
+
+                    isInTransition = true;
+                }
+                weightController.Process(owner, info);
+
+                if (IsEndOfAnimation(animation, animationInfo)) {
+                    currentAnimationIndex = nextAnimationIndex;
+                    animations[animationInfos[currentAnimationIndex].name].SetTime(0);
+                    isInTransition = false;
+                    weightController.Reset();
+                }
+            }
+        }
+        private int GetNextNode(int currentIndex, List<int> randomWeights) {
 
             int nextIndex = 0;
             int sum = 0;
@@ -181,6 +245,24 @@ namespace animator {
             }
 
             return nextIndex;
+        }
+
+        private bool IsTimeToTransition(Playable animation, AnimationInfo info) {
+
+            if (animation.GetTime() >= info.animationLength - info.transitionDuration) {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsEndOfAnimation(Playable animation, AnimationInfo info) {
+
+            if (animation.GetTime() >= info.animationLength) {
+                return true;
+            }
+
+            return false;
         }
     }
 }

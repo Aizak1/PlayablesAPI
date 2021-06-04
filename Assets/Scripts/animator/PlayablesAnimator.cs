@@ -20,7 +20,6 @@ namespace animator {
         public Brain brain;
 
         private Dictionary<string, GraphNode> graphNodes;
-        private Dictionary<string, ClipNodeInfo> clipNodesInfo;
 
         public void Setup(List<Command> commands) {
             if (graph.IsValid()) {
@@ -37,7 +36,6 @@ namespace animator {
             graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
 
             graphNodes = new Dictionary<string, GraphNode>();
-            clipNodesInfo = new Dictionary<string, ClipNodeInfo>();
 
             for (int i = 0; i < commands.Count; i++) {
                 ProcessCommand(commands[i]);
@@ -69,10 +67,6 @@ namespace animator {
 
                 ProcessAddOutputCommand(command);
 
-            } else if (command.ChangeControllersState.HasValue) {
-
-                ProcessChangeControllerCommand(command);
-
             } else if (command.ChangeWeight.HasValue) {
 
                 ProcessChangeWeightCommand(command);
@@ -92,26 +86,26 @@ namespace animator {
             var mask = resource.masks[setLayerMask.maskName];
             bool isAdditive = setLayerMask.isAdditive;
             foreach (var item in setLayerMask.animationNames) {
-                if (!clipNodesInfo.ContainsKey(item)) {
+                if (!graphNodes.ContainsKey(item)) {
                     Debug.LogError("No such animationName");
                     continue;
                 }
-                var clipNode = clipNodesInfo[item];
-                if (clipNode.parent.output.HasValue) {
-                    Debug.LogError("You need a layerMixer to set layer mask");
-                    continue;
-                }
-                var input = clipNode.parent.input.Value;
-                if (!input.IsPlayableOfType<AnimationLayerMixerPlayable>()) {
-                    Debug.LogError("You need a layerMixer to set layer mask");
+                var clip = graphNodes[item].input.Value;
+                if (clip.GetOutput(0).IsNull()) {
+                    Debug.LogError("Parent must be AnimationLayerMixer");
                     continue;
                 }
 
-                var layerMixer = (AnimationLayerMixerPlayable)input;
+                if (!clip.GetOutput(0).IsPlayableOfType<AnimationLayerMixerPlayable>()) {
+                    Debug.LogError("Parent must be AnimationLayerMixer");
+                    continue;
+                }
 
-                layerMixer.SetLayerMaskFromAvatarMask((uint)clipNode.portIndex, mask);
+                var layerMixer = (AnimationLayerMixerPlayable)clip.GetOutput(0);
 
-                layerMixer.SetLayerAdditive((uint)clipNode.portIndex, isAdditive);
+                layerMixer.SetLayerMaskFromAvatarMask((uint)graphNodes[item].portIndex, mask);
+
+                layerMixer.SetLayerAdditive((uint)graphNodes[item].portIndex, isAdditive);
             }
         }
 
@@ -144,28 +138,6 @@ namespace animator {
             }
         }
 
-        private void ProcessChangeControllerCommand(Command command) {
-            var changeControllersState = command.ChangeControllersState.Value;
-            var controllerNames = changeControllersState.controllerNames;
-            if (changeControllersState.EnableControllers.HasValue) {
-                foreach (var item in controllerNames) {
-                    if (!brain.AnimControllers.ContainsKey(item)) {
-                        Debug.LogError($"No controller with name {item} ");
-                        continue;
-                    }
-                    brain.AnimControllers[item].Enable();
-                }
-
-            } else if (changeControllersState.DisableControllers.HasValue) {
-                foreach (var item in controllerNames) {
-                    if (!brain.AnimControllers.ContainsKey(item)) {
-                        Debug.LogError($"No controller with name {item} ");
-                        continue;
-                    }
-                    brain.AnimControllers[item].Disable();
-                }
-            }
-        }
 
         private void ProcessAddInputCommand(Command command) {
             AddInputCommand inputCommand = command.AddInput.Value;
@@ -198,36 +170,20 @@ namespace animator {
                 }
 
                 AnimationClip clip = resource.animations[clipName];
-                float duration = animationInput.AnimationClip.Value.transitionDuration;
-                float length = clip.length;
-
-                if (length < duration) {
-                    Debug.LogError($"Invalid transition duration in {name}");
-                    return;
-                }
 
                 AnimationClipPlayable animation = AnimationClipPlayable.Create(graph, clip);
                 ConnectNodeToParent(parent, animation, initialWeight);
-                parent.connectedNodesCount++;
-                graphNodes[animationInput.parent] = parent;
-
-                var newAnimation = new ClipNodeInfo {
-                    parent = parent,
-                    playableClip = animation,
-                    transitionDuration = duration,
-                    animationLength = length,
-                    portIndex = parent.connectedNodesCount - 1
-                };
 
                 if (brain == null) {
                     return;
                 }
-                newAnimation.playableClip.SetTime(length);
-                clipNodesInfo.Add(name, newAnimation);
+                animation.SetTime(clip.length);
 
                 var graphNode = new GraphNode() {
-                    input = animation
+                    input = animation,
+                    portIndex = GetPortIndex(parent)
                 };
+
                 graphNodes.Add(name, graphNode);
 
 
@@ -240,15 +196,13 @@ namespace animator {
 
                 Playable playable = AnimationMixerPlayable.Create(graph);
 
-                var playableParent = new GraphNode {
-                    input = playable
-                };
-
-                graphNodes.Add(name, playableParent);
-
                 ConnectNodeToParent(parent, playable, initialWeight);
-                parent.connectedNodesCount++;
-                graphNodes[animationInput.parent] = parent;
+                var playableParent = new GraphNode {
+                    input = playable,
+                    portIndex = GetPortIndex(parent)
+
+                };
+                graphNodes.Add(name, playableParent);
 
             } else if (animationInput.AnimationLayerMixer.HasValue) {
                 if (graphNodes.ContainsKey(name)) {
@@ -258,15 +212,15 @@ namespace animator {
 
                 var playable = AnimationLayerMixerPlayable.Create(graph);
 
+                ConnectNodeToParent(parent, playable, initialWeight);
                 var playableParent = new GraphNode {
-                    input = playable
+                    input = playable,
+                    portIndex = GetPortIndex(parent)
+
                 };
 
                 graphNodes.Add(name, playableParent);
 
-                ConnectNodeToParent(parent, playable, initialWeight);
-                parent.connectedNodesCount++;
-                graphNodes[animationInput.parent] = parent;
 
             } else if (animationInput.AnimationJob.HasValue) {
 
@@ -315,16 +269,15 @@ namespace animator {
                     };
 
                     Playable lookAtPlayable = AnimationScriptPlayable.Create(graph, lookAtJob);
+                    ConnectNodeToParent(parent, lookAtPlayable, initialWeight);
 
                     var playableParent = new GraphNode {
-                        input = lookAtPlayable
+                        input = lookAtPlayable,
+                        portIndex = GetPortIndex(parent)
                     };
 
                     graphNodes.Add(name, playableParent);
 
-                    ConnectNodeToParent(parent, lookAtPlayable, initialWeight);
-                    parent.connectedNodesCount++;
-                    graphNodes[animationInput.parent] = parent;
 
                 } else if (job.TwoBoneIKJob.HasValue) {
                     var twoBoneIkInput = job.TwoBoneIKJob.Value;
@@ -360,9 +313,11 @@ namespace animator {
                     twoBoneIKJob.Setup(animator, topJoint, midJoint, endJoint, obj.transform);
 
                     Playable twoBone = AnimationScriptPlayable.Create(graph, twoBoneIKJob);
+                    ConnectNodeToParent(parent, twoBone, initialWeight);
 
                     var playableParent = new GraphNode {
-                        input = twoBone
+                        input = twoBone,
+                        portIndex = GetPortIndex(parent)
                     };
 
                     var twoBoneJobData = new TwoBoneIKJobTemp() {
@@ -370,12 +325,8 @@ namespace animator {
                     };
 
                     jobsTemp.Add(twoBoneJobData);
-
                     graphNodes.Add(name, playableParent);
 
-                    ConnectNodeToParent(parent, twoBone, initialWeight);
-                    parent.connectedNodesCount++;
-                    graphNodes[animationInput.parent] = parent;
 
                 } else if (job.DampingJob.HasValue) {
                     var dampingJobInput = job.DampingJob.Value;
@@ -453,16 +404,15 @@ namespace animator {
                     };
 
                     jobsTemp.Add(dampingJobData);
+                    ConnectNodeToParent(parent, dampingPlayable, initialWeight);
 
                     var playableParent = new GraphNode {
-                        input = dampingPlayable
+                        input = dampingPlayable,
+                        portIndex = GetPortIndex(parent)
                     };
 
                     graphNodes.Add(name, playableParent);
 
-                    ConnectNodeToParent(parent, dampingPlayable, initialWeight);
-                    parent.connectedNodesCount++;
-                    graphNodes[animationInput.parent] = parent;
 
                 }
 
@@ -477,68 +427,122 @@ namespace animator {
 
                 brain = brainNode.GetBehaviour();
                 brain.Initialize();
+                ConnectNodeToParent(parent, brainNode,initialWeight);
 
                 var playableParent = new GraphNode {
-                    input = brainNode
+                    input = brainNode,
+                    portIndex = GetPortIndex(parent)
                 };
 
                 graphNodes.Add(name, playableParent);
 
-                ConnectNodeToParent(parent, brainNode,initialWeight);
-                parent.connectedNodesCount++;
-                graphNodes[animationInput.parent] = parent;
             }
         }
 
         private void ProcessAddControllerCommand(Command command) {
             var controller = command.AddContoller.Value.AnimationController;
+
             if (brain.AnimControllers == null) {
                 Debug.LogError("No Animation Brain");
                 return;
             }
+
             if (brain.AnimControllers.ContainsKey(controller.name)) {
                 Debug.LogError($"Controller with name {controller.name} is already exists");
                 return;
             }
+
+            var name = controller.name;
+
             if (controller.WeightController.HasValue) {
-                var weightController = controller.WeightController.Value;
-                var weightExecuter = new WeightControllerExecutor();
-                if (weightController.CircleController.HasValue) {
-                    var circleExecuter = new CircleControllerExecutor();
-                    circleExecuter.isClose = weightController.CircleController.Value.isClose;
-                    weightExecuter.executor = circleExecuter;
 
-                } else if (weightController.RandomController.HasValue) {
-                    var randomWeights = weightController.RandomController.Value.randomWeights;
-                    if (randomWeights == null) {
-                        Debug.LogError($"No randomWeights on {controller.name}");
-                        return;
-                    }
-                    var randomExecuter = new RandomControllerExecutor();
-                    randomExecuter.randomWeights = randomWeights;
-                    weightExecuter.executor = randomExecuter;
+                var newController = new WeightControllerExecutor {
+                    isFree = true
+                };
 
-                } else {
-                    Debug.LogError("Unknown additionalController");
+                brain.AnimControllers.Add(name, newController);
+
+            } else if (controller.CircleController.HasValue) {
+
+                var weightControllerName = controller.CircleController.Value.weightControllerName;
+
+                if (!brain.AnimControllers.ContainsKey(weightControllerName)) {
                     return;
                 }
 
-                List<ClipNodeInfo> animationNodes = new List<ClipNodeInfo>();
-                foreach (var item in controller.WeightController.Value.animationNames) {
-                    if (!clipNodesInfo.ContainsKey(item)) {
-                        Debug.LogError("Unknown ClipNode Name");
-                        continue;
-                    }
-                    animationNodes.Add(clipNodesInfo[item]);
+                var executor =
+                    (WeightControllerExecutor)brain.AnimControllers[weightControllerName];
+
+                if (!executor.isFree) {
+                    return;
                 }
 
-                weightExecuter.clipNodesInfo = animationNodes;
-                weightExecuter.Disable();
-                brain.AnimControllers.Add(controller.name, weightExecuter);
+                executor.isFree = false;
 
-            } else {
-                Debug.LogError("No such controller");
-                return;
+                var infos = new List<AnimationInfo>();
+                var animations = new Dictionary<string, Playable>();
+
+                foreach (var item in controller.CircleController.Value.animationInfos) {
+
+                    if (!graphNodes.ContainsKey(item.name)) {
+                        continue;
+                    }
+
+                    infos.Add(item);
+                    animations.Add(item.name, graphNodes[item.name].input.Value);
+                }
+
+                bool isClose = controller.CircleController.Value.isClose;
+
+                var newController = new CircleControllerExecutor();
+                newController.Setup(executor, infos, isClose, animations);
+
+                brain.AnimControllers.Add(controller.name, newController);
+
+                var firstAnim = animations[infos[0].name];
+                firstAnim.SetTime(0);
+                firstAnim.GetOutput(0).SetInputWeight(firstAnim,1);
+
+            } else if (controller.RandomController.HasValue) {
+
+                var weightControllerName = controller.RandomController.Value.weightControllerName;
+
+                if (!brain.AnimControllers.ContainsKey(weightControllerName)) {
+                    return;
+                }
+
+                var executor =
+                    (WeightControllerExecutor)brain.AnimControllers[weightControllerName];
+
+                if (!executor.isFree) {
+                    return;
+                }
+
+                executor.isFree = false;
+
+                var infos = new List<AnimationInfo>();
+                var animations = new Dictionary<string, Playable>();
+
+                foreach (var item in controller.RandomController.Value.animationInfos) {
+
+                    if (!graphNodes.ContainsKey(item.name)) {
+                        continue;
+                    }
+
+                    infos.Add(item);
+                    animations.Add(item.name, graphNodes[item.name].input.Value);
+                }
+
+                var randomWeights = controller.RandomController.Value.randomWeights;
+
+                var newController = new RandomControllerExecutor();
+                newController.Setup(executor, infos, randomWeights, animations);
+
+                brain.AnimControllers.Add(controller.name, newController);
+
+                var firstAnim = animations[infos[0].name];
+                firstAnim.SetTime(0);
+                firstAnim.GetOutput(0).SetInputWeight(firstAnim, 1);
             }
         }
 
@@ -561,12 +565,21 @@ namespace animator {
         }
 
         private void ConnectNodeToParent(GraphNode parent, Playable playable, float weight) {
-            if (!parent.input.HasValue) {
-                parent.output.Value.SetSourcePlayable(playable);
-                parent.output.Value.SetWeight(weight);
-            } else {
+            if (parent.input.HasValue) {
                 parent.input.Value.AddInput(playable, 0);
                 parent.input.Value.SetInputWeight(playable, weight);
+
+            } else {
+                parent.output.Value.SetSourcePlayable(playable);
+                parent.output.Value.SetWeight(weight);
+            }
+        }
+
+        private int GetPortIndex(GraphNode parent) {
+            if (parent.input.HasValue) {
+                return parent.input.Value.GetInputCount() - 1;
+            } else {
+                return 0;
             }
         }
 

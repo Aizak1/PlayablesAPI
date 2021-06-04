@@ -75,7 +75,8 @@
                     "AnimationInput":{
                         "AnimationJob":{
                             "DampingJob":{
-                                "jointPathes": ["Model/Hips/Spine/Spine1/Spine2/RightShoulder",
+                                "jointPathes": [
+                                    "Model/Hips/Spine/Spine1/Spine2/RightShoulder",
                                     "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm",
                                     "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm",
                                     "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand"
@@ -121,7 +122,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Clapping"
                         },
                         "name":"anim1",
@@ -133,7 +133,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Flair"
                         },
                         "name":"anim2",
@@ -145,7 +144,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Silly Dancing"
                         },
                         "name":"anim3",
@@ -157,7 +155,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Spin In Place"
                         },
                         "name":"anim4",
@@ -169,7 +166,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Silly Dancing"
                         },
                         "name":"anim5",
@@ -181,7 +177,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Spin In Place"
                         },
                         "name":"anim6",
@@ -193,7 +188,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Clapping"
                         },
                         "name":"anim7",
@@ -204,36 +198,88 @@
             },{
                 "AddController":{
                     "AnimationController":{
+                        "name": "weight1",
+                        "WeightController":{ }
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
                         "name": "close",
-                        "WeightController":{
-                            "CircleController":{
-                                "isClose": true
-                            },
-                            "animationNames":["anim1", "anim2"]
+                        "CircleController":{
+                            "weightControllerName": "weight1",
+                            "isClose": true,
+                            "animationInfos":[
+                                {
+                                    "name": "anim1",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 1.167
+                                },{
+                                    "name": "anim2",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 1
+                                }
+                            ]
                         }
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
+                        "name": "weight2",
+                        "WeightController":{ }
                     }
                 }
             },{
                 "AddController":{
                     "AnimationController":{
                         "name": "open",
-                        "WeightController":{
-                            "CircleController":{
-                                "isClose": false
-                            },
-                            "animationNames":["anim3", "anim4"]
+                        "CircleController":{
+                            "weightControllerName": "weight2",
+                            "isClose": false,
+                            "animationInfos":[
+                                {
+                                    "name": "anim3",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 3.833
+                                },{
+                                    "name": "anim4",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 4
+                                }
+                            ]
                         }
                     }
                 }
             },{
                 "AddController":{
                     "AnimationController":{
+                        "name": "weight3",
+                        "WeightController":{ }
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
                         "name": "random",
-                        "WeightController":{
-                            "RandomController":{
-                                "randomWeights": [10, 20, 30]
-                            },
-                            "animationNames":["anim5", "anim6", "anim7"]
+                        "RandomController":{
+                            "weightControllerName": "weight3",
+                            "randomWeights": [10, 20, 30],
+                            "animationInfos":[
+                                {
+                                    "name": "anim5",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 3.833
+                                },{
+                                    "name": "anim6",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 4
+                                },{
+                                    "name": "anim7",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 1.167
+                                }
+                            ]
                         }
                     }
                 }

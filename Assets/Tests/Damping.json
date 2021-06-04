@@ -22,7 +22,8 @@
                     "AnimationInput":{
                         "AnimationJob":{
                             "DampingJob":{
-                                "jointPathes": ["Model/Hips/Spine/Spine1/Spine2/RightShoulder",
+                                "jointPathes": [
+                                    "Model/Hips/Spine/Spine1/Spine2/RightShoulder",
                                     "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm",
                                     "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm",
                                     "Model/Hips/Spine/Spine1/Spine2/RightShoulder/RightArm/RightForeArm/RightHand"
@@ -48,7 +49,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Silly Dancing"
                         },
                         "name":"anim1",
@@ -60,7 +60,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Spin In Place"
                         },
                         "name":"anim2",
@@ -72,7 +71,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Clapping"
                         },
                         "name":"anim3",
@@ -83,21 +81,34 @@
             },{
                 "AddController":{
                     "AnimationController":{
-                        "name": "close",
-                        "WeightController":{
-                            "CircleController":{
-                                "isClose": true
-                            },
-                            "animationNames":["anim1", "anim2", "anim3"]
-                        }
+                        "name": "weight1",
+                        "WeightController":{ }
                     }
                 }
             },{
-                "ChangeControllersState":{
-                    "EnableControllers":{
-                        
-                    },
-                    "controllerNames": ["close"]
+                "AddController":{
+                    "AnimationController":{
+                        "name": "close",
+                        "CircleController":{
+                            "weightControllerName": "weight1",
+                            "isClose": true,
+                            "animationInfos":[
+                                {
+                                    "name": "anim1",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 3.833
+                                },{
+                                    "name": "anim2",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 4
+                                },{
+                                    "name": "anim3",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 1.167
+                                }
+                            ]
+                        }
+                    }
                 }
             }
         ]

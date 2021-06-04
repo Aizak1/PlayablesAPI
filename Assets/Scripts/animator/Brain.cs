@@ -14,7 +14,7 @@ namespace animator {
         override public void PrepareFrame(Playable owner, FrameData info) {
 
             foreach (var item in AnimControllers) {
-                item.Value.ProcessLogic(owner, info);
+                item.Value.Process(owner, info);
             }
         }
     }

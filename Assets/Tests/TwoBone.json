@@ -68,21 +68,30 @@
             },{
                 "AddController":{
                     "AnimationController":{
-                        "name": "close",
-                        "WeightController":{
-                            "CircleController":{
-                                "isClose": true
-                            },
-                            "animationNames":["anim1", "anim2"]
-                        }
+                        "name": "weight1",
+                        "WeightController":{ }
                     }
                 }
             },{
-                "ChangeControllersState":{
-                    "EnableControllers":{
-                        
-                    },
-                    "controllerNames": ["close"]
+                "AddController":{
+                    "AnimationController":{
+                        "name": "close",
+                        "CircleController":{
+                            "weightControllerName": "weight1",
+                            "isClose": true,
+                            "animationInfos":[
+                                {
+                                    "name": "anim1",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 3.833
+                                },{
+                                    "name": "anim2",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 4
+                                }
+                            ]
+                        }
+                    }
                 }
             }
         ]

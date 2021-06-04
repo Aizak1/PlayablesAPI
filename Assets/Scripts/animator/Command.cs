@@ -7,7 +7,6 @@ namespace animator {
         public AddControllerCommand? AddContoller;
         public AddOutputCommand? AddOutput;
 
-        public ChangeControllersStateCommand? ChangeControllersState;
         public ChangeWeightCommand? ChangeWeight;
         public SetLayerMaskCommand? SetLayerMask;
     }
@@ -24,12 +23,6 @@ namespace animator {
         public AnimationOutput AnimationOutput;
     }
 
-    public struct ChangeControllersStateCommand {
-        public EnableControllersCommand? EnableControllers;
-        public DisableControllersCommand? DisableControllers;
-
-        public List<string> controllerNames;
-    }
 
     public struct ChangeWeightCommand {
         public string name;
@@ -43,9 +36,4 @@ namespace animator {
         public List<string> animationNames;
     }
 
-    public struct EnableControllersCommand {
-    }
-
-    public struct DisableControllersCommand {
-    }
 }

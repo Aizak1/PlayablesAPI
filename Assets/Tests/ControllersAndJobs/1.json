@@ -37,20 +37,6 @@
                     "parent": "damping",
                     "weight": 0
                 }
-            },{
-                "ChangeControllersState":{
-                    "EnableControllers":{
-                        
-                    },
-                    "controllerNames": ["close"]
-                }
-            },{
-                "ChangeControllersState":{
-                    "DisableControllers":{
-                        
-                    },
-                    "controllerNames": ["open", "random"]
-                }
             }
         ]
     }

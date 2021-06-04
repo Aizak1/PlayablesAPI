@@ -51,7 +51,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Clapping"
                         },
                         "name":"anim1",
@@ -63,7 +62,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Flair"
                         },
                         "name":"anim2",
@@ -75,7 +73,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Silly Dancing"
                         },
                         "name":"anim3",
@@ -87,7 +84,6 @@
                 "AddInput":{
                     "AnimationInput":{
                         "AnimationClip":{
-                            "transitionDuration":0.5,
                             "clipName":"Spin In Place"
                         },
                         "name":"anim4",
@@ -98,24 +94,56 @@
             },{
                 "AddController":{
                     "AnimationController":{
+                        "name": "weight1",
+                        "WeightController":{ }
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
                         "name": "close1",
-                        "WeightController":{
-                            "CircleController":{
-                                "isClose": true
-                            },
-                            "animationNames":["anim1", "anim2"]
+                        "CircleController":{
+                            "weightControllerName": "weight1",
+                            "isClose": true,
+                            "animationInfos":[
+                                {
+                                    "name": "anim1",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 1.167
+                                },{
+                                    "name": "anim2",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 1
+                                }
+                            ]
                         }
                     }
                 }
             },{
                 "AddController":{
                     "AnimationController":{
+                        "name": "weight2",
+                        "WeightController":{ }
+                    }
+                }
+            },{
+                "AddController":{
+                    "AnimationController":{
                         "name": "close2",
-                        "WeightController":{
-                            "CircleController":{
-                                "isClose": true
-                            },
-                            "animationNames":["anim3", "anim4"]
+                        "CircleController":{
+                            "weightControllerName": "weight2",
+                            "isClose": true,
+                            "animationInfos":[
+                                {
+                                    "name": "anim3",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 3.833
+                                },{
+                                    "name": "anim4",
+                                    "transitionDuration": 0.5,
+                                    "animationLength": 4
+                                }
+                            ]
                         }
                     }
                 }
@@ -130,13 +158,6 @@
                     "maskName": "Down",
                     "isAdditive": true,
                     "animationNames": ["anim3", "anim4"]
-                }
-            },{
-                "ChangeControllersState":{
-                    "EnableControllers":{
-                        
-                    },
-                    "controllerNames": ["close1", "close2"]
                 }
             }
         ]

@@ -44,7 +44,6 @@ namespace animator {
 
     public struct AnimationClipInput {
         public string clipName;
-        public float transitionDuration;
     }
 
     public struct AnimationMixerInput {
