@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace animator {
     public struct AnimationInput {
@@ -14,7 +13,6 @@ namespace animator {
     }
 
     public struct AnimationBrainInput {
-
     }
 
     public struct AnimationJobInput {
@@ -37,8 +35,6 @@ namespace animator {
         public string effectorName;
         public float minAngle;
         public float maxAngle;
-
-
     }
 
     public struct TwoBoneIKJobInput {
@@ -57,4 +53,3 @@ namespace animator {
     public struct AnimationLayerMixerInput {
     }
 }
-

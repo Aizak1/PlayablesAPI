@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-
 namespace animator {
 
     public class Resource : MonoBehaviour {
@@ -19,4 +18,3 @@ namespace animator {
 
     }
 }
-

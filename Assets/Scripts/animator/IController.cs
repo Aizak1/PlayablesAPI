@@ -1,6 +1,5 @@
 using UnityEngine.Playables;
 
-
 namespace animator {
     public interface IController {
 
@@ -11,4 +10,3 @@ namespace animator {
         public void ProcessLogic(Playable owner, FrameData info);
     }
 }
-

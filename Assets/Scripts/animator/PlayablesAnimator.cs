@@ -1,10 +1,8 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 using animationJobs;
-using System;
 using Unity.Collections;
 
 namespace animator {
@@ -15,8 +13,7 @@ namespace animator {
         [SerializeField]
         private Resource resource;
 
-        private List<DampingJobTemp> dampingJobsTemp = new List<DampingJobTemp>();
-        private List<TwoBoneIKJobTemp> twoBoneIKJobTemp = new List<TwoBoneIKJobTemp>();
+        private List<IJobTemp> jobsTemp = new List<IJobTemp>();
 
         private PlayableGraph graph;
         private Animator animator;
@@ -28,9 +25,10 @@ namespace animator {
         public void Setup(List<Command> commands) {
             if (graph.IsValid()) {
                 graph.Destroy();
-                foreach (var item in twoBoneIKJobTemp) {
-                    Destroy(item.effector);
+                foreach (var item in jobsTemp) {
+                    item.DisposeData();
                 }
+                jobsTemp = new List<IJobTemp>();
             }
 
             animator = GetComponent<Animator>();
@@ -189,6 +187,7 @@ namespace animator {
 
             if (animationInput.AnimationClip.HasValue) {
                 string clipName = animationInput.AnimationClip.Value.clipName;
+
                 if (graphNodes.ContainsKey(name)) {
                     Debug.LogError($"Playable with {name} is already exists");
                     return;
@@ -370,7 +369,7 @@ namespace animator {
                         effector = obj
                     };
 
-                    twoBoneIKJobTemp.Add(twoBoneJobData);
+                    jobsTemp.Add(twoBoneJobData);
 
                     graphNodes.Add(name, playableParent);
 
@@ -453,7 +452,7 @@ namespace animator {
                         Velocities = velocities
                     };
 
-                    dampingJobsTemp.Add(dampingJobData);
+                    jobsTemp.Add(dampingJobData);
 
                     var playableParent = new GraphNode {
                         input = dampingPlayable
@@ -518,6 +517,7 @@ namespace animator {
                     var randomExecuter = new RandomControllerExecutor();
                     randomExecuter.randomWeights = randomWeights;
                     weightExecuter.executor = randomExecuter;
+
                 } else {
                     Debug.LogError("Unknown additionalController");
                     return;
@@ -532,11 +532,9 @@ namespace animator {
                     animationNodes.Add(clipNodesInfo[item]);
                 }
 
-
                 weightExecuter.clipNodesInfo = animationNodes;
                 weightExecuter.Disable();
                 brain.AnimControllers.Add(controller.name, weightExecuter);
-
 
             } else {
                 Debug.LogError("No such controller");
@@ -575,11 +573,8 @@ namespace animator {
         private void OnDestroy() {
             if (graph.IsValid()) {
                 graph.Destroy();
-                foreach (var item in dampingJobsTemp) {
+                foreach (var item in jobsTemp) {
                     item.DisposeData();
-                }
-                foreach (var item in twoBoneIKJobTemp) {
-                    Destroy(item.effector);
                 }
             }
         }

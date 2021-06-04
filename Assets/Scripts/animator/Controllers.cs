@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Animations;
 using UnityEngine.Playables;
 
 
@@ -45,7 +44,6 @@ namespace animator {
                 var nodes = clipNodesInfo;
                 var currentIndex = currentAnimationIndex;
                 nextAnimationIndex = executor.GetNextNode(nodes, currentIndex);
-
 
             } else {
                 var current = clipNodesInfo[currentAnimationIndex];
@@ -133,8 +131,6 @@ namespace animator {
             }
         }
     }
-
-
 
     public struct CircleControllerExecutor : IAdditionalController {
         public bool isClose;

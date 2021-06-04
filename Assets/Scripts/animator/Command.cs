@@ -1,8 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Animations;
-using UnityEngine.Playables;
 
 namespace animator {
 
@@ -28,13 +24,11 @@ namespace animator {
         public AnimationOutput AnimationOutput;
     }
 
-
     public struct ChangeControllersStateCommand {
         public EnableControllersCommand? EnableControllers;
         public DisableControllersCommand? DisableControllers;
 
         public List<string> controllerNames;
-
     }
 
     public struct ChangeWeightCommand {
@@ -53,8 +47,5 @@ namespace animator {
     }
 
     public struct DisableControllersCommand {
-
     }
-
-
 }

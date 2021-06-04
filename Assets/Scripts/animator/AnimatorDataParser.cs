@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using UnityEngine;
 using vjp;
 
@@ -13,7 +11,6 @@ namespace animator {
     }
 
     public class AnimatorDataParser : MonoBehaviour {
-
 
         private const string INPUT_DATA = "InputData";
         private const string COMMANDS = "Commands";
@@ -55,7 +52,6 @@ namespace animator {
         private const string EFFECTOR_NAME = "effectorName";
         private const string MIN_ANGLE = "minAngle";
         private const string MAX_ANGLE = "maxAngle";
-
 
         private const string ANIMATION_CONTROLLER = "AnimationController";
         private const string RANDOM_WEIGHTS = "randomWeights";
@@ -105,10 +101,9 @@ namespace animator {
             }
 
             return optionInputData;
-
         }
 
-        public Option<InputData> GetInputDataFromJson(JSONType json) {
+        private Option<InputData> GetInputDataFromJson(JSONType json) {
             InputData inputData = new InputData {
                 Commands = new List<Command>()
             };
@@ -212,7 +207,6 @@ namespace animator {
                 Debug.LogError("Unknown Add command field");
             }
 
-
             return command;
         }
 
@@ -230,7 +224,6 @@ namespace animator {
             }
 
             var outputDict = outputcommandDict[ANIMATION_OUTPUT].Obj.Peel();
-            var animationOutput = new AnimationOutput();
 
             if (!outputDict.ContainsKey(NAME)) {
                 Debug.LogError("No Name field");
@@ -242,6 +235,7 @@ namespace animator {
                 return null;
             }
 
+            var animationOutput = new AnimationOutput();
             animationOutput.name = outputDict[NAME].Str.Peel();
             addOutputCommand.AnimationOutput = animationOutput;
 
@@ -262,7 +256,6 @@ namespace animator {
             }
 
             var controllerDict = addController[ANIMATION_CONTROLLER].Obj.Peel();
-            var animationController = new AnimationController();
 
             if (!controllerDict.ContainsKey(NAME)) {
                 Debug.LogError("No name field");
@@ -273,8 +266,6 @@ namespace animator {
                 Debug.LogError("name field is empty");
                 return null;
             }
-            animationController.name = controllerDict[NAME].Str.Peel();
-
 
             if (!controllerDict.ContainsKey(WEIGHT_CONTROLLER)) {
                 Debug.LogError("No weightController field");
@@ -287,18 +278,20 @@ namespace animator {
             }
 
             var weightControllerDict = controllerDict[WEIGHT_CONTROLLER].Obj.Peel();
-            var weightController = new WeightController();
 
             if (!weightControllerDict.ContainsKey(ANIMATION_NAMES)) {
                 Debug.LogError("No animation names field");
                 return null;
             }
+
             if (weightControllerDict[ANIMATION_NAMES].Arr.IsNone()) {
                 Debug.LogError("animation names field is empty");
                 return null;
             }
+
             List<string> animationNames = new List<string>();
             List<JSONType> names = weightControllerDict[ANIMATION_NAMES].Arr.Peel();
+
             foreach (var name in names) {
                 if (name.Str.IsNone()) {
                     Debug.LogError("Wrong Name");
@@ -306,15 +299,18 @@ namespace animator {
                 }
                 animationNames.Add(name.Str.Peel());
             }
-            weightController.animationNames = animationNames;
+
+            var weightController = new WeightController {
+                animationNames = animationNames
+            };
 
             if (weightControllerDict.ContainsKey(CIRCLE_CONTROLLER)) {
                 if (weightControllerDict[CIRCLE_CONTROLLER].Obj.IsNone()) {
                     Debug.LogError("circle controller field is empty");
                     return null;
                 }
+
                 var circleControllerDict = weightControllerDict[CIRCLE_CONTROLLER].Obj.Peel();
-                var circleController = new CircleController();
 
                 if (!circleControllerDict.ContainsKey(IS_CLOSE)) {
                     Debug.LogError("No isClose field");
@@ -326,9 +322,11 @@ namespace animator {
                     return null;
                 }
 
-                circleController.isClose = circleControllerDict[IS_CLOSE].Bool.Peel();
-                weightController.CircleController = circleController;
+                var circleController = new CircleController {
+                    isClose = circleControllerDict[IS_CLOSE].Bool.Peel()
+                };
 
+                weightController.CircleController = circleController;
 
             } else if (weightControllerDict.ContainsKey(RANDOM_CONTROLLER)) {
                 if (weightControllerDict[RANDOM_CONTROLLER].Obj.IsNone()) {
@@ -336,7 +334,6 @@ namespace animator {
                     return null;
                 }
                 var randomControllerDict = weightControllerDict[RANDOM_CONTROLLER].Obj.Peel();
-                var randomController = new RandomController();
 
                 if (!randomControllerDict.ContainsKey(RANDOM_WEIGHTS)) {
                     Debug.LogError("No random weights field");
@@ -348,11 +345,8 @@ namespace animator {
                     return null;
                 }
 
-
-
                 List<int> weights = new List<int>();
                 List<JSONType> weightList = randomControllerDict[RANDOM_WEIGHTS].Arr.Peel();
-
 
                 foreach (var weight in weightList) {
 
@@ -371,15 +365,21 @@ namespace animator {
                     weights.Add(num);
                 }
 
-                randomController.randomWeights = weights;
+                var randomController = new RandomController {
+                    randomWeights = weights
+                };
+
                 weightController.RandomController = randomController;
 
             } else {
                 Debug.LogError("No controller in Weight controller");
             }
 
+            var animationController = new AnimationController {
+                name = controllerDict[NAME].Str.Peel(),
+                WeightController = weightController
+            };
 
-            animationController.WeightController = weightController;
             addControllerCommand.AnimationController = animationController;
 
             return addControllerCommand;
@@ -399,7 +399,6 @@ namespace animator {
             }
 
             var animInputDict = inputItem[ANIMATION_INPUT].Obj.Peel();
-            var animationInput = new AnimationInput();
 
             if (!animInputDict.ContainsKey(PARENT)) {
                 Debug.LogError("No Parent field");
@@ -411,8 +410,6 @@ namespace animator {
                 return null;
             }
 
-            animationInput.parent = animInputDict[PARENT].Str.Peel();
-
             if (!animInputDict.ContainsKey(NAME)) {
                 Debug.LogError("No Parent field");
                 return null;
@@ -422,8 +419,6 @@ namespace animator {
                 Debug.LogError("Parent field is empty");
                 return null;
             }
-
-            animationInput.name = animInputDict[NAME].Str.Peel();
 
             if (!animInputDict.ContainsKey(INITIAL_WEIGHT)) {
                 Debug.LogError("No initialWeight field");
@@ -443,9 +438,11 @@ namespace animator {
                 return null;
             }
 
-            animationInput.initialWeight = initWeight;
-
-
+            var animationInput = new AnimationInput {
+                parent = animInputDict[PARENT].Str.Peel(),
+                name = animInputDict[NAME].Str.Peel(),
+                initialWeight = initWeight
+            };
 
             if (animInputDict.ContainsKey(ANIMATION_CLIP)) {
 
@@ -455,7 +452,6 @@ namespace animator {
                 }
 
                 var animClip = animInputDict[ANIMATION_CLIP].Obj.Peel();
-                var animationClipInput = new AnimationClipInput();
 
                 if (!animClip.ContainsKey(TRANSITION_DURATION)) {
                     Debug.LogError("No Animation Transition Duration field");
@@ -474,19 +470,21 @@ namespace animator {
                     return null;
                 }
 
-
                 if (!animClip.ContainsKey(CLIP_NAME)) {
                     Debug.LogError("No Clip Name field");
                     return null;
                 }
+
                 if (animClip[CLIP_NAME].Str.IsNone()) {
                     Debug.LogError("Clip Name field is empty");
                     return null;
                 }
-                var clipName = animClip[CLIP_NAME].Str.Peel();
 
-                animationClipInput.transitionDuration = duration;
-                animationClipInput.clipName = clipName;
+                var animationClipInput = new AnimationClipInput {
+                    transitionDuration = duration,
+                    clipName = animClip[CLIP_NAME].Str.Peel()
+                };
+
                 animationInput.AnimationClip = animationClipInput;
                 animInput.AnimationInput = animationInput;
 
@@ -499,7 +497,6 @@ namespace animator {
             } else if (animInputDict.ContainsKey(ANIMATION_LAYER_MIXER)) {
 
                 var animationMixerLayerInput = new AnimationLayerMixerInput();
-
                 animationInput.AnimationLayerMixer = animationMixerLayerInput;
                 animInput.AnimationInput = animationInput;
 
@@ -518,8 +515,9 @@ namespace animator {
                         Debug.LogError("Look At Job field is empty");
                         return null;
                     }
+
                     var lookAtJobDict = animationJobDict[LOOK_AT_JOB].Obj.Peel();
-                    var lookAtJob = new LookAtJobInput();
+
                     if (!lookAtJobDict.ContainsKey(JOINT_PATH)) {
                         Debug.LogError("No joint path field ");
                         return null;
@@ -587,6 +585,7 @@ namespace animator {
                         Debug.LogError("maxAngle field is empty");
                         return null;
                     }
+
                     string tempX = lookAtJobDict[AXIS_X].Num.Peel();
                     string tempY = lookAtJobDict[AXIS_Y].Num.Peel();
                     string tempZ = lookAtJobDict[AXIS_Z].Num.Peel();
@@ -618,15 +617,16 @@ namespace animator {
                         return null;
                     }
 
+                    var lookAtJob = new LookAtJobInput {
+                        jointPath = lookAtJobDict[JOINT_PATH].Str.Peel(),
+                        axisX = xAxis,
+                        axisY = yAxis,
+                        axisZ = zAxis,
+                        effectorName = lookAtJobDict[EFFECTOR_NAME].Str.Peel(),
+                        minAngle = minAngle,
+                        maxAngle = maxAngle
+                    };
 
-
-                    lookAtJob.jointPath = lookAtJobDict[JOINT_PATH].Str.Peel();
-                    lookAtJob.axisX = xAxis;
-                    lookAtJob.axisY = yAxis;
-                    lookAtJob.axisZ = zAxis;
-                    lookAtJob.effectorName = lookAtJobDict[EFFECTOR_NAME].Str.Peel();
-                    lookAtJob.minAngle = minAngle;
-                    lookAtJob.maxAngle = maxAngle;
                     animationJobInput.LookAtJob = lookAtJob;
 
                 } else if (animationJobDict.ContainsKey(TWOBONE_IK_JOB)) {
@@ -635,8 +635,9 @@ namespace animator {
                         Debug.LogError("TwoBoneIkJob field is empty");
                         return null;
                     }
+
                     var twoBoneIkDict = animationJobDict[TWOBONE_IK_JOB].Obj.Peel();
-                    var twoBoneIKInput = new TwoBoneIKJobInput();
+
                     if (!twoBoneIkDict.ContainsKey(JOINT_PATH)) {
                         Debug.LogError("No joint path field ");
                         return null;
@@ -655,8 +656,11 @@ namespace animator {
                         Debug.LogError("effectorName field is empty");
                     }
 
-                    twoBoneIKInput.jointPath = twoBoneIkDict[JOINT_PATH].Str.Peel();
-                    twoBoneIKInput.effectorName = twoBoneIkDict[EFFECTOR_NAME].Str.Peel();
+                    var twoBoneIKInput = new TwoBoneIKJobInput {
+                        jointPath = twoBoneIkDict[JOINT_PATH].Str.Peel(),
+                        effectorName = twoBoneIkDict[EFFECTOR_NAME].Str.Peel()
+                    };
+
                     animationJobInput.TwoBoneIKJob = twoBoneIKInput;
 
 
@@ -665,8 +669,8 @@ namespace animator {
                         Debug.LogError("Look At Job field is empty");
                         return null;
                     }
+
                     var dampingJobDict = animationJobDict[DAMPING_JOB].Obj.Peel();
-                    var dampingJobInput = new DampingJobInput();
 
                     if (!dampingJobDict.ContainsKey(JOINT_PATHES)) {
                         Debug.LogError("No joint pathes field");
@@ -680,6 +684,7 @@ namespace animator {
 
                     List<string> jointPathes = new List<string>();
                     List<JSONType> pathes = dampingJobDict[JOINT_PATHES].Arr.Peel();
+
                     foreach (var name in pathes) {
                         if (name.Str.IsNone()) {
                             Debug.LogError("Wrong path");
@@ -687,19 +692,23 @@ namespace animator {
                         }
                         jointPathes.Add(name.Str.Peel());
                     }
-                    dampingJobInput.jointPathes = jointPathes;
+
+                    var dampingJobInput = new DampingJobInput {
+                        jointPathes = jointPathes
+                    };
+
                     animationJobInput.DampingJob = dampingJobInput;
 
                 } else {
                     Debug.LogError("Unknown job");
                     return null;
-
                 }
 
                 animationInput.AnimationJob = animationJobInput;
                 animInput.AnimationInput = animationInput;
 
             } else if (animInputDict.ContainsKey(ANIMATION_BRAIN)) {
+
                 var animationBrainInput = new AnimationBrainInput();
                 animationInput.AnimationBrain = animationBrainInput;
                 animInput.AnimationInput = animationInput;
@@ -709,15 +718,12 @@ namespace animator {
                 return null;
             }
 
-
             return animInput;
         }
 
         private ChangeControllersStateCommand? GetControllersStateCommand(
             Dictionary<string, JSONType> controllerStateCommandDict
             ) {
-
-            var controllersStateCommand = new ChangeControllersStateCommand();
 
             if (!controllerStateCommandDict.ContainsKey(CONTROLLER_NAMES)) {
                 Debug.LogError("No animationNames field");
@@ -737,16 +743,21 @@ namespace animator {
                 }
                 names.Add(name.Str.Peel());
             }
-            controllersStateCommand.controllerNames = names;
 
+            var controllersStateCommand = new ChangeControllersStateCommand {
+                controllerNames = names
+            };
 
             if (controllerStateCommandDict.ContainsKey(ENABLE_CONTROLLERS)) {
+
                 var enableContollersCommand = new EnableControllersCommand();
                 controllersStateCommand.EnableControllers = enableContollersCommand;
 
             } else if (controllerStateCommandDict.ContainsKey(DISABLE_CONTROLLERS)) {
+
                 var disableControllerCommand = new DisableControllersCommand();
                 controllersStateCommand.DisableControllers = disableControllerCommand;
+
             } else {
                 Debug.LogError("Unknown controller state command");
                 return null;
@@ -758,8 +769,6 @@ namespace animator {
         private ChangeWeightCommand? GetChangeWeightCommand(
            Dictionary<string, JSONType> changeWeightDict
            ) {
-
-            var changeWeightCommand = new ChangeWeightCommand();
 
             if (!changeWeightDict.ContainsKey(NAME)) {
                 Debug.LogError("No name field");
@@ -794,15 +803,16 @@ namespace animator {
             string tempWeight = changeWeightDict[WEIGHT].Num.Peel();
             CultureInfo ci = CultureInfo.InvariantCulture;
 
-
             if (!float.TryParse(tempWeight, NumberStyles.Any, ci, out float weight)) {
                 Debug.LogError("Animation Transition Duration isn't number");
                 return null;
             }
 
-            changeWeightCommand.name = changeWeightDict[NAME].Str.Peel();
-            changeWeightCommand.parent = changeWeightDict[PARENT].Str.Peel();
-            changeWeightCommand.weight = weight;
+            var changeWeightCommand = new ChangeWeightCommand {
+                name = changeWeightDict[NAME].Str.Peel(),
+                parent = changeWeightDict[PARENT].Str.Peel(),
+                weight = weight
+            };
 
             return changeWeightCommand;
         }
@@ -810,8 +820,6 @@ namespace animator {
         private SetLayerMaskCommand? GetSetLayerMaskCommand(
            Dictionary<string, JSONType> layerMaskDict
            ) {
-
-            var layerMaskCommand = new SetLayerMaskCommand();
 
             if (!layerMaskDict.ContainsKey(MASK_NAME)) {
                 Debug.LogError("No mask name field");
@@ -852,9 +860,11 @@ namespace animator {
                 names.Add(name.Str.Peel());
             }
 
-            layerMaskCommand.maskName = layerMaskDict[MASK_NAME].Str.Peel();
-            layerMaskCommand.isAdditive = layerMaskDict[IS_ADDITIVE].Bool.Peel();
-            layerMaskCommand.animationNames = names;
+            var layerMaskCommand = new SetLayerMaskCommand {
+                maskName = layerMaskDict[MASK_NAME].Str.Peel(),
+                isAdditive = layerMaskDict[IS_ADDITIVE].Bool.Peel(),
+                animationNames = names
+            };
 
             return layerMaskCommand;
         }

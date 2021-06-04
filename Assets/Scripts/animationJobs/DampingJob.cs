@@ -76,7 +76,7 @@ namespace animationJobs {
             }
         }
     }
-    public struct DampingJobTemp {
+    public struct DampingJobTemp : IJobTemp{
         public NativeArray<TransformStreamHandle> Handles;
         public NativeArray<Vector3> LocalPositions;
         public NativeArray<Quaternion> LocalRotations;
@@ -89,7 +89,6 @@ namespace animationJobs {
             LocalRotations.Dispose();
             Positions.Dispose();
             Velocities.Dispose();
-
         }
     }
 }

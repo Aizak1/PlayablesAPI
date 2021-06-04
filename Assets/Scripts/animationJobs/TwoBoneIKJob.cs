@@ -74,9 +74,12 @@ namespace animationJobs {
         }
     }
 
-    public struct TwoBoneIKJobTemp {
+    public struct TwoBoneIKJobTemp : IJobTemp {
         public GameObject effector;
 
+        public void DisposeData() {
+            Object.Destroy(effector);
+        }
     }
 
 }
