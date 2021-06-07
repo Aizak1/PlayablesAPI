@@ -485,11 +485,27 @@ namespace animator {
                 foreach (var item in controller.CircleController.Value.animationInfos) {
 
                     if (!graphNodes.ContainsKey(item.name)) {
+                        Debug.LogError($"No animation with name {item.name}");
+                        continue;
+                    }
+
+                    if (item.transitionDuration > item.animationLength) {
+                        Debug.LogError("Transition duration can't be greater then length");
+                        continue;
+                    }
+                    var playable = graphNodes[item.name].input.Value;
+                    if (!playable.IsPlayableOfType<AnimationClipPlayable>()) {
+                        Debug.LogError("Controllers should have only animations");
+                        continue;
+                    }
+                    var clipPlayable = (AnimationClipPlayable)playable;
+                    if(clipPlayable.GetAnimationClip().length < item.animationLength) {
+                        Debug.LogError("animationLenght must be less than clip length");
                         continue;
                     }
 
                     infos.Add(item);
-                    animations.Add(item.name, graphNodes[item.name].input.Value);
+                    animations.Add(item.name, playable);
                 }
 
                 bool isClose = controller.CircleController.Value.isClose;
