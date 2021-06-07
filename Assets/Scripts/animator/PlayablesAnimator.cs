@@ -512,10 +512,12 @@ namespace animator {
                     animations.Add(item.name, playable);
                 }
 
+                executor.Setup(animations, infos[0].name);
+
                 bool isClose = controller.CircleController.Value.isClose;
                 var newController = new CircleControllerExecutor();
 
-                newController.Setup(executor, infos, isClose, animations);
+                newController.Setup(executor, infos, isClose);
 
                 brain.animControllers.Add(controller.name, newController);
                 brain.controllerNames.Add(controller.name);
@@ -573,10 +575,12 @@ namespace animator {
                     animations.Add(item.name, graphNodes[item.name].input.Value);
                 }
 
+                executor.Setup(animations, infos[0].name);
+
                 var randomWeights = controller.RandomController.Value.randomWeights;
 
                 var newController = new RandomControllerExecutor();
-                newController.Setup(executor, infos, randomWeights, animations);
+                newController.Setup(executor, infos, randomWeights);
 
                 brain.animControllers.Add(controller.name, newController);
                 brain.controllerNames.Add(controller.name);
