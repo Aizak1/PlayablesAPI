@@ -499,7 +499,10 @@ namespace animator {
                         continue;
                     }
                     var clipPlayable = (AnimationClipPlayable)playable;
-                    if(clipPlayable.GetAnimationClip().length < item.animationLength) {
+                    var originalLength = clipPlayable.GetAnimationClip().length;
+                    var roundedLength = System.Math.Round(originalLength, 3);
+                    var difference = System.Math.Round(roundedLength - item.animationLength, 3);
+                    if (difference < 0) {
                         Debug.LogError("animationLenght must be less than clip length");
                         continue;
                     }
