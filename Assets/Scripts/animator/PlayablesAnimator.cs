@@ -442,12 +442,12 @@ namespace animator {
         private void ProcessAddControllerCommand(Command command) {
             var controller = command.AddContoller.Value.AnimationController;
 
-            if (brain.AnimControllers == null) {
+            if (brain.animControllers == null) {
                 Debug.LogError("No Animation Brain");
                 return;
             }
 
-            if (brain.AnimControllers.ContainsKey(controller.name)) {
+            if (brain.animControllers.ContainsKey(controller.name)) {
                 Debug.LogError($"Controller with name {controller.name} is already exists");
                 return;
             }
@@ -460,18 +460,19 @@ namespace animator {
                     isFree = true
                 };
 
-                brain.AnimControllers.Add(name, newController);
+                brain.animControllers.Add(name, newController);
+                brain.controllerNames.Add(controller.name);
 
             } else if (controller.CircleController.HasValue) {
 
                 var weightControllerName = controller.CircleController.Value.weightControllerName;
 
-                if (!brain.AnimControllers.ContainsKey(weightControllerName)) {
+                if (!brain.animControllers.ContainsKey(weightControllerName)) {
                     return;
                 }
 
                 var executor =
-                    (WeightControllerExecutor)brain.AnimControllers[weightControllerName];
+                    (WeightControllerExecutor)brain.animControllers[weightControllerName];
 
                 if (!executor.isFree) {
                     return;
@@ -499,7 +500,10 @@ namespace animator {
                         continue;
                     }
                     var clipPlayable = (AnimationClipPlayable)playable;
-                    if(clipPlayable.GetAnimationClip().length < item.animationLength) {
+                    var originalLength = clipPlayable.GetAnimationClip().length;
+                    var roundedLength = System.Math.Round(originalLength, 3);
+                    var difference = System.Math.Round(roundedLength - item.animationLength,3);
+                    if (difference < 0) {
                         Debug.LogError("animationLenght must be less than clip length");
                         continue;
                     }
@@ -509,11 +513,12 @@ namespace animator {
                 }
 
                 bool isClose = controller.CircleController.Value.isClose;
-
                 var newController = new CircleControllerExecutor();
-                newController.Setup(executor, infos, isClose, animations);
 
-                brain.AnimControllers.Add(controller.name, newController);
+                newController.Setup(weightControllerName, infos, isClose, animations, brain);
+
+                brain.animControllers.Add(controller.name, newController);
+                brain.controllerNames.Add(controller.name);
 
                 var firstAnim = animations[infos[0].name];
                 firstAnim.SetTime(0);
@@ -523,12 +528,12 @@ namespace animator {
 
                 var weightControllerName = controller.RandomController.Value.weightControllerName;
 
-                if (!brain.AnimControllers.ContainsKey(weightControllerName)) {
+                if (!brain.animControllers.ContainsKey(weightControllerName)) {
                     return;
                 }
 
                 var executor =
-                    (WeightControllerExecutor)brain.AnimControllers[weightControllerName];
+                    (WeightControllerExecutor)brain.animControllers[weightControllerName];
 
                 if (!executor.isFree) {
                     return;
@@ -542,6 +547,25 @@ namespace animator {
                 foreach (var item in controller.RandomController.Value.animationInfos) {
 
                     if (!graphNodes.ContainsKey(item.name)) {
+                        Debug.LogError($"No animation with name {item.name}");
+                        continue;
+                    }
+
+                    if (item.transitionDuration > item.animationLength) {
+                        Debug.LogError("Transition duration can't be greater then length");
+                        continue;
+                    }
+                    var playable = graphNodes[item.name].input.Value;
+                    if (!playable.IsPlayableOfType<AnimationClipPlayable>()) {
+                        Debug.LogError("Controllers should have only animations");
+                        continue;
+                    }
+                    var clipPlayable = (AnimationClipPlayable)playable;
+                    var originalLength = clipPlayable.GetAnimationClip().length;
+                    var roundedLength = System.Math.Round(originalLength, 3);
+                    var difference = System.Math.Round(roundedLength - item.animationLength, 3);
+                    if (difference < 0) {
+                        Debug.LogError("animationLenght must be less than clip length");
                         continue;
                     }
 
@@ -552,9 +576,10 @@ namespace animator {
                 var randomWeights = controller.RandomController.Value.randomWeights;
 
                 var newController = new RandomControllerExecutor();
-                newController.Setup(executor, infos, randomWeights, animations);
+                newController.Setup(weightControllerName, infos, randomWeights, animations,brain);
 
-                brain.AnimControllers.Add(controller.name, newController);
+                brain.animControllers.Add(controller.name, newController);
+                brain.controllerNames.Add(controller.name);
 
                 var firstAnim = animations[infos[0].name];
                 firstAnim.SetTime(0);

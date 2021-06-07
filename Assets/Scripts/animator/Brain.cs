@@ -4,17 +4,19 @@ using UnityEngine.Playables;
 namespace animator {
     public class Brain : PlayableBehaviour {
 
-        public Dictionary<string, IController> AnimControllers;
+        public Dictionary<string, IController> animControllers;
+        public List<string> controllerNames;
 
         public void Initialize() {
 
-            AnimControllers = new Dictionary<string, IController>();
+            animControllers = new Dictionary<string, IController>();
+            controllerNames = new List<string>();
         }
 
         override public void PrepareFrame(Playable owner, FrameData info) {
 
-            foreach (var item in AnimControllers) {
-                item.Value.Process(owner, info);
+            foreach (var item in controllerNames) {
+                animControllers[item].Process(owner, info);
             }
         }
     }
