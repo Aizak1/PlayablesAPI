@@ -515,7 +515,7 @@ namespace animator {
                 bool isClose = controller.CircleController.Value.isClose;
                 var newController = new CircleControllerExecutor();
 
-                newController.Setup(weightControllerName, infos, isClose, animations, brain);
+                newController.Setup(executor, infos, isClose, animations);
 
                 brain.animControllers.Add(controller.name, newController);
                 brain.controllerNames.Add(controller.name);
@@ -576,7 +576,7 @@ namespace animator {
                 var randomWeights = controller.RandomController.Value.randomWeights;
 
                 var newController = new RandomControllerExecutor();
-                newController.Setup(weightControllerName, infos, randomWeights, animations,brain);
+                newController.Setup(executor, infos, randomWeights, animations);
 
                 brain.animControllers.Add(controller.name, newController);
                 brain.controllerNames.Add(controller.name);

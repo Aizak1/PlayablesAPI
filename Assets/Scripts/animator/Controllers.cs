@@ -30,7 +30,7 @@ namespace animator {
         public List<AnimationInfo> animationInfos;
     }
 
-    public struct WeightControllerExecutor : IController {
+    public class WeightControllerExecutor : IController {
         private Playable currentAnimation;
         private Playable nextAnimation;
 
@@ -74,14 +74,13 @@ namespace animator {
         }
     }
 
-    public struct CircleControllerExecutor : IController {
-        private Brain brain;
+    public class CircleControllerExecutor : IController {
         private bool isClose;
 
         private Dictionary<string, Playable> animations;
         private List<AnimationInfo> animationInfos;
 
-        private string weightControllerName;
+        private WeightControllerExecutor weightController;
 
         private int currentAnimationIndex;
         private int nextAnimationIndex;
@@ -89,18 +88,16 @@ namespace animator {
         private bool isInTransition;
 
         public void Setup(
-            string weightControllerName,
+            WeightControllerExecutor weightController,
             List<AnimationInfo> animationInfos,
             bool isClose,
-            Dictionary<string, Playable> animations,
-            Brain brain
+            Dictionary<string, Playable> animations
             ) {
 
             this.isClose = isClose;
             this.animationInfos = animationInfos;
-            this.weightControllerName = weightControllerName;
+            this.weightController = weightController;
             this.animations = animations;
-            this.brain = brain;
             currentAnimationIndex = nextAnimationIndex = 0;
             animations[animationInfos[0].name].SetTime(0);
         }
@@ -116,10 +113,7 @@ namespace animator {
                 if (!isInTransition) {
                     if (IsTimeToTransition(animation, animationInfo)) {
                         var nextAnimation = animations[animationInfos[nextAnimationIndex].name];
-                        var weightController = (WeightControllerExecutor)
-                            brain.animControllers[weightControllerName];
                         weightController.Setup(animation, nextAnimation, animationInfo);
-                        brain.animControllers[weightControllerName] = weightController;
                         isInTransition = true;
                     }
                 }
@@ -128,10 +122,7 @@ namespace animator {
                     currentAnimationIndex = nextAnimationIndex;
                     animations[animationInfos[currentAnimationIndex].name].SetTime(0);
                     isInTransition = false;
-                    var weightController = (WeightControllerExecutor)
-                            brain.animControllers[weightControllerName];
                     weightController.Reset();
-                    brain.animControllers[weightControllerName] = weightController;
                 }
 
             }
@@ -172,14 +163,13 @@ namespace animator {
         }
     }
 
-    public struct RandomControllerExecutor : IController {
-        private Brain brain;
+    public class RandomControllerExecutor : IController {
         private List<int> randomWeights;
 
         private Dictionary<string, Playable> animations;
         private List<AnimationInfo> animationInfos;
 
-        private string weightControllerName;
+        private WeightControllerExecutor weightController;
 
         private int currentAnimationIndex;
         private int nextAnimationIndex;
@@ -187,18 +177,16 @@ namespace animator {
         private bool isInTransition;
 
         public void Setup(
-            string weightControllerName,
+            WeightControllerExecutor weightController,
             List<AnimationInfo> animationInfos,
             List<int> randomWeights,
-            Dictionary<string, Playable> animations,
-            Brain brain
+            Dictionary<string, Playable> animations
             ) {
 
             this.randomWeights = randomWeights;
             this.animationInfos = animationInfos;
-            this.weightControllerName = weightControllerName;
+            this.weightController = weightController;
             this.animations = animations;
-            this.brain = brain;
             currentAnimationIndex = nextAnimationIndex = 0;
             animations[animationInfos[0].name].SetTime(0);
         }
@@ -213,10 +201,7 @@ namespace animator {
                 if (!isInTransition) {
                     if (IsTimeToTransition(animation, animationInfo)) {
                         var nextAnimation = animations[animationInfos[nextAnimationIndex].name];
-                        var weightController = (WeightControllerExecutor)
-                            brain.animControllers[weightControllerName];
                         weightController.Setup(animation, nextAnimation, animationInfo);
-                        brain.animControllers[weightControllerName] = weightController;
                         isInTransition = true;
                     }
                 }
@@ -225,10 +210,7 @@ namespace animator {
                     currentAnimationIndex = nextAnimationIndex;
                     animations[animationInfos[currentAnimationIndex].name].SetTime(0);
                     isInTransition = false;
-                    var weightController = (WeightControllerExecutor)
-                            brain.animControllers[weightControllerName];
                     weightController.Reset();
-                    brain.animControllers[weightControllerName] = weightController;
                 }
 
             }
